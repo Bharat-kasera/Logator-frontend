@@ -3,10 +3,42 @@ export interface Config {
   socketUrl: string;
 }
 
-// Use environment variables if available, otherwise fallback to development defaults
-export const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4001";
-export const SOCKET_URL =
-  import.meta.env.VITE_SOCKET_URL || "http://localhost:4001";
+// Determine if we're in production or development
+const isProduction = import.meta.env.PROD;
+
+// Use environment variables if available, otherwise fallback based on environment
+const getApiUrl = () => {
+  // If explicit environment variable is set, use it
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
+
+  // In production, use relative URLs (same domain) or your backend URL
+  if (isProduction) {
+    return import.meta.env.VITE_BACKEND_URL || "/api";
+  }
+
+  // In development, use local backend
+  return "http://localhost:4001";
+};
+
+const getSocketUrl = () => {
+  // If explicit environment variable is set, use it
+  if (import.meta.env.VITE_SOCKET_URL) {
+    return import.meta.env.VITE_SOCKET_URL;
+  }
+
+  // In production, use your backend URL
+  if (isProduction) {
+    return import.meta.env.VITE_BACKEND_URL || window.location.origin;
+  }
+
+  // In development, use local backend
+  return "http://localhost:4001";
+};
+
+export const API_URL = getApiUrl();
+export const SOCKET_URL = getSocketUrl();
 
 export const config: Config = {
   apiUrl: API_URL,
@@ -14,4 +46,4 @@ export const config: Config = {
 };
 
 // For development, API calls use relative paths with Vite proxy
-// For production, you can set VITE_API_URL in environment variables
+// For production, set VITE_BACKEND_URL to your backend Vercel URL
