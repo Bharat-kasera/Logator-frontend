@@ -1,0 +1,99 @@
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { Socket } from "socket.io-client";
+import io from 'socket.io-client';
+import { SOCKET_URL } from '../config';
+
+interface AuthContextType {
+  isAuthenticated: boolean;
+  user: any | null;
+  wsToken: string | null;
+  login: (phone: string, otp: string, country_code?: string) => Promise<void>;
+  logout: () => void;
+  socket: Socket | null;
+  setUser: (user: any | null) => void; // 💪 added setUser
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [isAuthenticated, setIsAuthenticated] = useState(() => !!localStorage.getItem('wsToken'));
+  const [user, setUser] = useState<any | null>(() => {
+    const u = localStorage.getItem('user');
+    return u ? JSON.parse(u) : null;
+  });
+  const [wsToken, setWsToken] = useState<string | null>(() => localStorage.getItem('wsToken'));
+  const [socket, setSocket] = useState<Socket | null>(null);
+
+  useEffect(() => {
+    const newSocket = io(SOCKET_URL);
+    setSocket(newSocket);
+    return () => {
+      newSocket.close();
+    };
+  }, []);
+
+  const login = async (phone: string, otp: string, country_code?: string) => {
+    try {
+      let cc = country_code;
+      let ph = phone;
+      if (!cc && phone.includes(' ')) {
+        [cc, ph] = phone.split(' ');
+      }
+      if (!cc || !ph) throw new Error('Invalid phone/country_code');
+
+      const checkRes = await fetch('/api/check-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ country_code: cc, phone: ph })
+      });
+      const checkData = await checkRes.json();
+      if (!checkData.exists) throw new Error('User not registered');
+
+      const loginRes = await fetch('/api/login-otp-verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ country_code: cc, phone: ph, otp })
+      });
+      if (!loginRes.ok) throw new Error('OTP verification failed');
+      const { user, wsToken } = await loginRes.json();
+      setUser(user);
+      setWsToken(wsToken);
+      localStorage.setItem('wsToken', wsToken);
+      localStorage.setItem('user', JSON.stringify(user));
+      setIsAuthenticated(true);
+    } catch (error) {
+      setUser(null);
+      setWsToken(null);
+      localStorage.removeItem('wsToken');
+      localStorage.removeItem('user');
+      setIsAuthenticated(false);
+      throw error;
+    }
+  };
+
+  const logout = () => {
+    setIsAuthenticated(false);
+    setUser(null);
+    setWsToken(null);
+    localStorage.removeItem('wsToken');
+    localStorage.removeItem('user');
+    if (socket) {
+      socket.disconnect();
+      setSocket(null);
+    }
+  };
+
+  return (
+    <AuthContext.Provider value={{ isAuthenticated, user, wsToken, login, logout, socket, setUser }}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
