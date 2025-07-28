@@ -1,7 +1,8 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect } from "react";
 import { Socket } from "socket.io-client";
-import io from 'socket.io-client';
-import { SOCKET_URL } from '../config';
+import io from "socket.io-client";
+import { SOCKET_URL } from "../config";
+import { api } from "../utils/api";
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -15,13 +16,19 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(() => !!localStorage.getItem('wsToken'));
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
+  const [isAuthenticated, setIsAuthenticated] = useState(
+    () => !!localStorage.getItem("wsToken")
+  );
   const [user, setUser] = useState<any | null>(() => {
-    const u = localStorage.getItem('user');
+    const u = localStorage.getItem("user");
     return u ? JSON.parse(u) : null;
   });
-  const [wsToken, setWsToken] = useState<string | null>(() => localStorage.getItem('wsToken'));
+  const [wsToken, setWsToken] = useState<string | null>(() =>
+    localStorage.getItem("wsToken")
+  );
   const [socket, setSocket] = useState<Socket | null>(null);
 
   useEffect(() => {
@@ -36,36 +43,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       let cc = country_code;
       let ph = phone;
-      if (!cc && phone.includes(' ')) {
-        [cc, ph] = phone.split(' ');
+      if (!cc && phone.includes(" ")) {
+        [cc, ph] = phone.split(" ");
       }
-      if (!cc || !ph) throw new Error('Invalid phone/country_code');
+      if (!cc || !ph) throw new Error("Invalid phone/country_code");
 
-      const checkRes = await fetch('/api/check-user', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ country_code: cc, phone: ph })
+      const checkRes = await api.post("/check-user", {
+        country_code: cc,
+        phone: ph,
       });
       const checkData = await checkRes.json();
-      if (!checkData.exists) throw new Error('User not registered');
+      if (!checkData.exists) throw new Error("User not registered");
 
-      const loginRes = await fetch('/api/login-otp-verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ country_code: cc, phone: ph, otp })
+      const loginRes = await api.post("/login-otp-verify", {
+        country_code: cc,
+        phone: ph,
+        otp,
       });
-      if (!loginRes.ok) throw new Error('OTP verification failed');
+      if (!loginRes.ok) throw new Error("OTP verification failed");
       const { user, wsToken } = await loginRes.json();
       setUser(user);
       setWsToken(wsToken);
-      localStorage.setItem('wsToken', wsToken);
-      localStorage.setItem('user', JSON.stringify(user));
+      localStorage.setItem("wsToken", wsToken);
+      localStorage.setItem("user", JSON.stringify(user));
       setIsAuthenticated(true);
     } catch (error) {
       setUser(null);
       setWsToken(null);
-      localStorage.removeItem('wsToken');
-      localStorage.removeItem('user');
+      localStorage.removeItem("wsToken");
+      localStorage.removeItem("user");
       setIsAuthenticated(false);
       throw error;
     }
@@ -75,8 +81,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsAuthenticated(false);
     setUser(null);
     setWsToken(null);
-    localStorage.removeItem('wsToken');
-    localStorage.removeItem('user');
+    localStorage.removeItem("wsToken");
+    localStorage.removeItem("user");
     if (socket) {
       socket.disconnect();
       setSocket(null);
@@ -84,7 +90,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, wsToken, login, logout, socket, setUser }}>
+    <AuthContext.Provider
+      value={{ isAuthenticated, user, wsToken, login, logout, socket, setUser }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -93,7 +101,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };

@@ -50,7 +50,7 @@ const Login: React.FC = () => {
           [cc, ph] = formData.phone.split(" ");
         }
 
-        const res = await api.post("/api/check-user", {
+        const res = await api.post("/check-user", {
           country_code: cc,
           phone: ph,
         });
@@ -63,7 +63,7 @@ const Login: React.FC = () => {
 
         // Send OTP via Twilio
         console.log("🚀 Sending OTP to:", cc + ph);
-        const otpRes = await api.post("/api/otp/send-otp", {
+        const otpRes = await api.post("/otp/send-otp", {
           country_code: cc,
           phone: ph,
         });

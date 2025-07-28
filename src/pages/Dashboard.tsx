@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { api } from "../utils/api";
 
 interface DashboardData {
   pendingRequests: any[];
@@ -14,7 +15,9 @@ interface DashboardData {
 const Dashboard: React.FC = () => {
   const { wsToken, user } = useAuth();
   const navigate = useNavigate();
-  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(
+    null
+  );
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -23,7 +26,7 @@ const Dashboard: React.FC = () => {
 
   const fetchDashboardData = async () => {
     try {
-      const response = await fetch("/api/dashboard", {
+      const response = await api.get("/dashboard", {
         headers: {
           Authorization: `Bearer ${wsToken}`,
         },
@@ -77,7 +80,8 @@ const Dashboard: React.FC = () => {
         {/* Welcome Section */}
         <div className="mb-6 sm:mb-8">
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
-            Welcome back, <span className="text-orange-500">{user?.firstname || "User"}</span>
+            Welcome back,{" "}
+            <span className="text-orange-500">{user?.firstname || "User"}</span>
           </h1>
           <p className="text-gray-600 text-sm sm:text-base lg:text-lg">
             Here's what's happening with your visitor management system today.
@@ -139,7 +143,6 @@ const Dashboard: React.FC = () => {
                 <p className="text-2xl sm:text-3xl font-bold text-gray-900">
                   {dashboardData?.stats.total_visitors || 0}
                 </p>
-
               </div>
               <div className="w-10 h-10 sm:w-12 sm:h-12 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
                 <svg
@@ -227,7 +230,6 @@ const Dashboard: React.FC = () => {
                 <p className="text-2xl sm:text-3xl font-bold text-yellow-600">
                   {dashboardData?.pendingRequests.length || 0}
                 </p>
-
               </div>
               <div className="w-10 h-10 sm:w-12 sm:h-12 bg-yellow-100 rounded-lg flex items-center justify-center flex-shrink-0">
                 <svg
@@ -279,7 +281,9 @@ const Dashboard: React.FC = () => {
                         />
                       </svg>
                     </div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">No establishments yet</h3>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">
+                      No establishments yet
+                    </h3>
                     <p className="text-gray-500 mb-6">
                       Create your first establishment to start managing visitors
                     </p>
@@ -320,18 +324,21 @@ const Dashboard: React.FC = () => {
                                   {establishment.name}
                                 </h3>
                                 <div className="flex items-center gap-2 mt-1">
-                                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                    establishment.plan === 1
-                                      ? "bg-gray-100 text-gray-800"
-                                      : establishment.plan === 2
-                                      ? "bg-orange-100 text-orange-800"
-                                      : "bg-blue-100 text-blue-800"
-                                  }`}>
+                                  <span
+                                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                      establishment.plan === 1
+                                        ? "bg-gray-100 text-gray-800"
+                                        : establishment.plan === 2
+                                        ? "bg-orange-100 text-orange-800"
+                                        : "bg-blue-100 text-blue-800"
+                                    }`}
+                                  >
                                     {establishment.plan === 1
                                       ? "Basic"
                                       : establishment.plan === 2
                                       ? "Pro"
-                                      : "Enterprise"} Plan
+                                      : "Enterprise"}{" "}
+                                    Plan
                                   </span>
                                 </div>
                               </div>
@@ -339,7 +346,9 @@ const Dashboard: React.FC = () => {
                           </div>
                           <div className="flex flex-wrap gap-2 flex-shrink-0">
                             <button
-                              onClick={() => navigate("/dashboard2/departments")}
+                              onClick={() =>
+                                navigate("/dashboard2/departments")
+                              }
                               className="px-4 py-2 text-sm bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 transition-colors font-medium"
                             >
                               Departments
@@ -394,38 +403,41 @@ const Dashboard: React.FC = () => {
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {dashboardData?.pendingRequests.slice(0, 5).map((request, index) => (
-                      <div
-                        key={index}
-                        className="border border-gray-200 rounded-lg p-3 hover:border-orange-300 transition-colors"
-                      >
-                        <div className="flex items-start gap-3">
-                          <div className="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <svg
-                              className="w-4 h-4 text-yellow-600"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                              />
-                            </svg>
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm font-medium text-gray-900">
-                              {request.type === "D" ? "Department" : "Gate"} invitation
-                            </p>
-                            <p className="text-xs text-gray-500 truncate mt-1">
-                              {request.establishment_name}
-                            </p>
+                    {dashboardData?.pendingRequests
+                      .slice(0, 5)
+                      .map((request, index) => (
+                        <div
+                          key={index}
+                          className="border border-gray-200 rounded-lg p-3 hover:border-orange-300 transition-colors"
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                              <svg
+                                className="w-4 h-4 text-yellow-600"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                                />
+                              </svg>
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm font-medium text-gray-900">
+                                {request.type === "D" ? "Department" : "Gate"}{" "}
+                                invitation
+                              </p>
+                              <p className="text-xs text-gray-500 truncate mt-1">
+                                {request.establishment_name}
+                              </p>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
                   </div>
                 )}
               </div>

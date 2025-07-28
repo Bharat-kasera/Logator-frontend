@@ -72,7 +72,7 @@ const Register: React.FC = () => {
     console.log("🚀 REGISTERING USER:", payload);
 
     try {
-      const res = await api.post("/api/register", payload);
+      const res = await api.post("/register", payload);
 
       console.log("📡 Response received:", {
         status: res.status,

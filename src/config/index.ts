@@ -15,11 +15,13 @@ const getApiUrl = () => {
 
   // In production, use relative URLs (same domain) or your backend URL
   if (isProduction) {
-    return import.meta.env.VITE_BACKEND_URL || "/api";
+    return import.meta.env.VITE_BACKEND_URL
+      ? `${import.meta.env.VITE_BACKEND_URL}/api`
+      : "/api";
   }
 
   // In development, use local backend
-  return "http://localhost:4001";
+  return "http://localhost:4001/api";
 };
 
 const getSocketUrl = () => {
