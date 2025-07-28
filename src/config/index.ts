@@ -26,7 +26,7 @@ const getApiUrl = () => {
         "VITE_BACKEND_URL environment variable is required in production"
       );
     }
-    return `${backendUrl}/api`;
+    return `${backendUrl.replace(/\/$/, "")}/api`;
   }
   // In development, use local backend
   return "http://localhost:4001/api";
@@ -51,7 +51,7 @@ const getSocketUrl = () => {
         "VITE_BACKEND_URL environment variable is required in production"
       );
     }
-    return backendUrl;
+    return backendUrl.replace(/\/$/, "");
   }
 
   // In development, use local backend
