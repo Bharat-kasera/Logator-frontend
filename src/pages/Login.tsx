@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { PhoneInput } from "../components/PhoneInput";
+import { api } from "../utils/api";
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -49,10 +50,9 @@ const Login: React.FC = () => {
           [cc, ph] = formData.phone.split(" ");
         }
 
-        const res = await fetch("/api/check-user", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ country_code: cc, phone: ph }),
+        const res = await api.post("/api/check-user", {
+          country_code: cc,
+          phone: ph,
         });
         const data = await res.json();
 
@@ -63,10 +63,9 @@ const Login: React.FC = () => {
 
         // Send OTP via Twilio
         console.log("🚀 Sending OTP to:", cc + ph);
-        const otpRes = await fetch("/api/otp/send-otp", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ country_code: cc, phone: ph }),
+        const otpRes = await api.post("/api/otp/send-otp", {
+          country_code: cc,
+          phone: ph,
         });
 
         if (!otpRes.ok) {

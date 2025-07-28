@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { PhoneInput } from "../components/PhoneInput";
 import PhotoUpload from "../components/PhotoUpload";
 import { useAuth } from "../contexts/AuthContext";
+import { api } from "../utils/api";
 
 const Register: React.FC = () => {
   const navigate = useNavigate();
@@ -69,15 +70,9 @@ const Register: React.FC = () => {
     };
 
     console.log("🚀 REGISTERING USER:", payload);
-    console.log("📍 Making request to:", "/api/register");
-    console.log("🌐 Current origin:", window.location.origin);
 
     try {
-      const res = await fetch("/api/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      const res = await api.post("/api/register", payload);
 
       console.log("📡 Response received:", {
         status: res.status,
