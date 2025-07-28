@@ -40,6 +40,15 @@ const getSocketUrl = () => {
 export const API_URL = getApiUrl();
 export const SOCKET_URL = getSocketUrl();
 
+// Debug logging for production
+console.log("🔧 CONFIG DEBUG:", {
+  isProduction,
+  VITE_API_URL: import.meta.env.VITE_API_URL,
+  VITE_BACKEND_URL: import.meta.env.VITE_BACKEND_URL,
+  finalApiUrl: API_URL,
+  finalSocketUrl: SOCKET_URL,
+});
+
 export const config: Config = {
   apiUrl: API_URL,
   socketUrl: SOCKET_URL,
