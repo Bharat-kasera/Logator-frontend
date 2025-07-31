@@ -3,6 +3,7 @@ import { useEstablishment } from "../contexts/EstablishmentContext";
 import { useAuth } from "../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import InviteDepartmentUserModal from "../components/InviteDepartmentUserModal";
+import { api } from "../utils/api";
 
 interface Department {
   id: number;
@@ -38,8 +39,8 @@ const Departments: React.FC = () => {
     setLoading(true);
     setError("");
     try {
-      const response = await fetch(
-        `/api/departments/${selectedEstablishment.id}`,
+      const response = await api.get(
+        `/departments/${selectedEstablishment.id}`,
         {
           headers: { Authorization: `Bearer ${wsToken}` },
         }
@@ -65,16 +66,13 @@ const Departments: React.FC = () => {
     setSuccess("");
 
     try {
-      const response = await fetch("/api/departments", {
-        method: "POST",
+      const response = await api.post("/departments", {
+        establishment_id: selectedEstablishment.id,
+        name: dept.trim(),
+      }, {
         headers: {
-          "Content-Type": "application/json",
           Authorization: `Bearer ${wsToken}`,
         },
-        body: JSON.stringify({
-          establishment_id: selectedEstablishment.id,
-          name: dept.trim(),
-        }),
       });
 
       if (!response.ok) {
@@ -104,8 +102,7 @@ const Departments: React.FC = () => {
     setSuccess("");
 
     try {
-      const response = await fetch(`/api/departments/${id}`, {
-        method: "DELETE",
+      const response = await api.delete(`/departments/${id}`, {
         headers: { Authorization: `Bearer ${wsToken}` },
       });
 

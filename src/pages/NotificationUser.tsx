@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { api } from '../utils/api';
 
 interface Invitation {
   id: number;
@@ -25,7 +26,7 @@ const NotificationUser: React.FC = () => {
   const fetchInvitations = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/requests/pending', {
+      const response = await api.get('/requests/pending', {
         headers: {
           'Authorization': `Bearer ${wsToken}`,
         },
@@ -56,14 +57,14 @@ const NotificationUser: React.FC = () => {
       setRespondingTo(invitationKey);
       setError(null);
 
-      const apiResponse = await fetch(`/api/requests/${invitation.id}/respond`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${wsToken}`,
-        },
-        body: JSON.stringify({ response: action }),
-      });
+             const apiResponse = await api.post(`/requests/${invitation.id}/respond`, 
+         { response: action },
+         {
+           headers: {
+             'Authorization': `Bearer ${wsToken}`,
+           },
+         }
+       );
 
       if (apiResponse.ok) {
         // Remove the invitation from the list since it's no longer pending

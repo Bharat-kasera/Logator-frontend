@@ -4,6 +4,7 @@ import type { Establishment } from '../contexts/EstablishmentContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import InviteUserModal from '../components/InviteUserModal';
+import { api } from '../utils/api';
 
 interface Gate {
   id: number;
@@ -48,7 +49,7 @@ const Gates: React.FC = () => {
   const fetchAvailableEstablishments = async () => {
     setLoadingEstablishments(true);
     try {
-      const response = await fetch('/api/establishments/my-establishments', {
+      const response = await api.get('/establishments/my-establishments', {
         headers: { 'Authorization': `Bearer ${wsToken}` }
       });
       
@@ -76,7 +77,7 @@ const Gates: React.FC = () => {
     setError('');
     
     try {
-      const response = await fetch(`/api/gates/${selectedEstablishment.id}`, {
+      const response = await api.get(`/gates/${selectedEstablishment.id}`, {
         headers: { 'Authorization': `Bearer ${wsToken}` }
       });
       
@@ -153,13 +154,10 @@ const Gates: React.FC = () => {
         radius: geofencingEnabled ? parseInt(coordinates.radius) : null
       };
 
-      const response = await fetch('/api/gates', {
-        method: 'POST',
+      const response = await api.post('/gates', requestBody, {
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${wsToken}`
-        },
-        body: JSON.stringify(requestBody)
+        }
       });
       
       if (!response.ok) {
@@ -202,13 +200,10 @@ const Gates: React.FC = () => {
         radius: geofencingEnabled ? parseInt(coordinates.radius) : null
       };
 
-      const response = await fetch(`/api/gates/${editingGate.id}`, {
-        method: 'PUT',
+      const response = await api.put(`/gates/${editingGate.id}`, requestBody, {
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${wsToken}`
-        },
-        body: JSON.stringify(requestBody)
+        }
       });
       
       if (!response.ok) {
@@ -248,8 +243,7 @@ const Gates: React.FC = () => {
     setSuccess('');
     
     try {
-      const response = await fetch(`/api/gates/${id}`, {
-        method: 'DELETE',
+      const response = await api.delete(`/gates/${id}`, {
         headers: { 'Authorization': `Bearer ${wsToken}` }
       });
       

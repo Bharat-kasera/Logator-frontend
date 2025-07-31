@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Circle, useMapEvents, useMap } from 'react-leaflet';
 import { LatLng } from 'leaflet';
 import { useAuth } from '../contexts/AuthContext';
+import { api } from '../utils/api';
 import 'leaflet/dist/leaflet.css';
 
 // Fix for default markers in react-leaflet
@@ -213,14 +214,13 @@ const GateForm: React.FC<GateFormProps> = ({
       const url = editingGate ? `/api/gates/${editingGate.id}` : '/api/gates';
       const method = editingGate ? 'PUT' : 'POST';
 
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${wsToken}`
-        },
-        body: JSON.stringify(requestBody)
-      });
+      const response = editingGate 
+        ? await api.put(`/gates/${editingGate.id}`, requestBody, {
+            headers: { 'Authorization': `Bearer ${wsToken}` }
+          })
+        : await api.post('/gates', requestBody, {
+            headers: { 'Authorization': `Bearer ${wsToken}` }
+          });
 
       if (!response.ok) {
         const errorData = await response.json();

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useEstablishment } from '../contexts/EstablishmentContext';
+import { api } from '../utils/api';
 import PhoneInput from './PhoneInput';
 
 interface Gate {
@@ -103,16 +104,13 @@ const InviteUserModal: React.FC<InviteUserModalProps> = ({
     setLoading(true);
 
     try {
-      const response = await fetch('/api/requests/invite', {
-        method: 'POST',
+      const response = await api.post('/requests/invite', {
+        userPhone: phoneNumber.trim(),
+        gateId: selectedGateId,
+      }, {
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${wsToken}`,
         },
-        body: JSON.stringify({
-          userPhone: phoneNumber.trim(),
-          gateId: selectedGateId,
-        }),
       });
 
       const data = await response.json();

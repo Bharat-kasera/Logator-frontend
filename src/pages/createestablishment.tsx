@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { api } from '../utils/api';
 
 const CreateEstablishment: React.FC = () => {
   const { user, wsToken } = useAuth();
@@ -55,16 +56,13 @@ const CreateEstablishment: React.FC = () => {
         });
       }
 
-      const response = await fetch('/api/establishments/create-establishment', {
-        method: 'POST',
+      const response = await api.post('/establishments/create-establishment', {
+        ...formData,
+        logo: logoBase64,
+      }, {
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${wsToken}`,
         },
-        body: JSON.stringify({
-          ...formData,
-          logo: logoBase64,
-        }),
       });
 
       if (!response.ok) {

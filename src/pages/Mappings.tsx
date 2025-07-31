@@ -5,6 +5,7 @@ import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 
 import { useEstablishment } from '../contexts/EstablishmentContext';
 import { useAuth } from '../contexts/AuthContext';
+import { api } from '../utils/api';
 
 const statusColors = {
   '1': 'warning.main', // Pending
@@ -124,19 +125,21 @@ const Mappings: React.FC = () => {
     setError('');
     try {
       const deptId = departments[deptIdx].id;
-      const res = await fetch('/api/user_department_map', {
-        method: 'POST',
+      const res = await api.post('/user_department_map', {
+        establishment_id: selectedEstablishment.id, 
+        department_id: deptId, 
+        user_phone: phone, 
+        status: '1'
+      }, {
         headers: { 
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${wsToken}`
-        },
-        body: JSON.stringify({ establishment_id: selectedEstablishment.id, department_id: deptId, user_phone: phone, status: '1' })
+        }
       });
       if (!res.ok) throw new Error('Failed to map user');
       setRequestSent({ type: 'dept', idx: deptIdx });
       setDeptInputs({ ...deptInputs, [deptIdx]: '' });
       // Refresh mappings
-      const updated = await fetch(`/api/user_department_map?establishment_id=${selectedEstablishment.id}`, {
+      const updated = await api.get(`/user_department_map?establishment_id=${selectedEstablishment.id}`, {
         headers: { 'Authorization': `Bearer ${wsToken}` }
       }).then(r => r.json());
       setDeptMappings(updated);
@@ -156,19 +159,21 @@ const Mappings: React.FC = () => {
     setError('');
     try {
       const gateId = gates[gateIdx].id;
-      const res = await fetch('/api/user_gate_map', {
-        method: 'POST',
+      const res = await api.post('/user_gate_map', {
+        establishment_id: selectedEstablishment.id, 
+        gate_id: gateId, 
+        user_phone: phone, 
+        status: '1'
+      }, {
         headers: { 
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${wsToken}`
-        },
-        body: JSON.stringify({ establishment_id: selectedEstablishment.id, gate_id: gateId, user_phone: phone, status: '1' })
+        }
       });
       if (!res.ok) throw new Error('Failed to map user');
       setRequestSent({ type: 'gate', idx: gateIdx });
       setGateInputs({ ...gateInputs, [gateIdx]: '' });
       // Refresh mappings
-      const updated = await fetch(`/api/user_gate_map?establishment_id=${selectedEstablishment.id}`, {
+      const updated = await api.get(`/user_gate_map?establishment_id=${selectedEstablishment.id}`, {
         headers: { 'Authorization': `Bearer ${wsToken}` }
       }).then(r => r.json());
       setGateMappings(updated);
@@ -389,17 +394,14 @@ const Mappings: React.FC = () => {
                   const addArr = Array.from(deptAdds[dept.id] || []);
                   const removeArr = Array.from(deptRemoves[dept.id] || []);
                   if (addArr.length === 0 && removeArr.length === 0) continue;
-                  await fetch('/api/user-department-map/batch-update', {
-                    method: 'POST',
+                  await api.post('/user-department-map/batch-update', {
+                    department_id: dept.id,
+                    add: addArr,
+                    remove: removeArr
+                  }, {
                     headers: { 
-                      'Content-Type': 'application/json',
                       'Authorization': `Bearer ${wsToken}`
-                    },
-                    body: JSON.stringify({
-                      department_id: dept.id,
-                      add: addArr,
-                      remove: removeArr
-                    })
+                    }
                   });
                 }
                 // Refresh mappings

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { api } from '../utils/api';
 
 interface DashboardData {
   pendingRequests: any[];
@@ -24,7 +25,7 @@ const Home: React.FC = () => {
 
   const fetchDashboardData = async () => {
     try {
-      const response = await fetch('/api/dashboard', {
+      const response = await api.get('/dashboard', {
         headers: {
           'Authorization': `Bearer ${wsToken}`,
         },
