@@ -1,7 +1,7 @@
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const QRCode = require('qrcode.react');
+import React from 'react';
+import { QRCodeSVG } from 'qrcode.react';
 
-const QRCodeWrapper = (props: any) => <QRCode {...props} />;
+const QRCodeWrapper = (props: any) => <QRCodeSVG {...props} />;
 
 export default QRCodeWrapper;

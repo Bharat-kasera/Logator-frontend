@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Tabs, Tab, List, ListItem, ListItemText, IconButton, Button, Paper } from '@mui/material';
+import { Box, Typography, Tabs, Tab, List, ListItem, ListItemText, IconButton, Button, Paper, TextField } from '@mui/material';
 import { PhoneInput } from '../components/PhoneInput';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 
 import { useEstablishment } from '../contexts/EstablishmentContext';
+import { useAuth } from '../contexts/AuthContext';
 
 const statusColors = {
   '1': 'warning.main', // Pending
@@ -16,18 +17,40 @@ const statusLabels = {
   '3': 'Declined',
 };
 
+interface Department {
+  id: number;
+  name: string;
+  establishment_id: number;
+}
+
+interface Gate {
+  id: number;
+  name: string;
+  establishment_id: number;
+}
+
+interface UserMapping {
+  id: number;
+  user_id: number;
+  user_phone: string;
+  department_id?: number;
+  gate_id?: number;
+  status: string;
+}
+
 const Mappings: React.FC = () => {
   // New state for batch adds/removes
   const [deptAdds, setDeptAdds] = useState<{ [deptId: number]: Set<number> }>({});
   const [deptRemoves, setDeptRemoves] = useState<{ [deptId: number]: Set<number> }>({});
   const [deptPhoneInputs, setDeptPhoneInputs] = useState<{ [deptId: number]: string }>({});
   const [deptPhoneErrors, setDeptPhoneErrors] = useState<{ [deptId: number]: string }>({});
-  const { selectedEstablishment } = useEstablishment();
+  const { selectedEstablishment, setSelectedEstablishment } = useEstablishment();
+  const { wsToken } = useAuth();
   const [tab, setTab] = useState(0);
-  const [departments, setDepartments] = useState<any[]>([]);
-  const [gates, setGates] = useState<any[]>([]);
-  const [deptMappings, setDeptMappings] = useState<any[]>([]);
-  const [gateMappings, setGateMappings] = useState<any[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [gates, setGates] = useState<Gate[]>([]);
+  const [deptMappings, setDeptMappings] = useState<UserMapping[]>([]);
+  const [gateMappings, setGateMappings] = useState<UserMapping[]>([]);
   const [deptInputs, setDeptInputs] = useState<{ [key: number]: string }>({});
   const [gateInputs, setGateInputs] = useState<{ [key: number]: string }>({});
   const [requestSent, setRequestSent] = useState<{ type: 'dept' | 'gate', idx: number } | null>(null);
@@ -36,29 +59,50 @@ const Mappings: React.FC = () => {
 
   // Fetch departments, gates, and mappings on mount (with establishment_id)
   useEffect(() => {
-    if (!selectedEstablishment?.id) return;
+    if (!selectedEstablishment?.id || !wsToken) return;
     setLoading(true);
     setError('');
     const eid = selectedEstablishment.id;
+    
+    const fetchWithAuth = (url: string) => 
+      fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${wsToken}`
+        }
+      }).then(res => {
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        }
+        return res.json();
+      });
+
     Promise.all([
-      fetch(`/api/departments/${eid}`).then(res => res.json()),
-      fetch(`/api/gates?establishment_id=${eid}`).then(res => res.json()),
-      fetch(`/api/user_department_map?establishment_id=${eid}`).then(res => res.json()),
-      fetch(`/api/user_gate_map?establishment_id=${eid}`).then(res => res.json()),
+      fetchWithAuth(`/api/departments/${eid}`),
+      fetchWithAuth(`/api/gates/${eid}`), // Fixed endpoint - should be /:establishment_id not query param
+      fetchWithAuth(`/api/user_department_map?establishment_id=${eid}`),
+      fetchWithAuth(`/api/user_gate_map?establishment_id=${eid}`),
     ])
       .then(([departments, gates, deptMappings, gateMappings]) => {
-        setDepartments(departments);
-        setGates(gates);
-        setDeptMappings(deptMappings);
-        setGateMappings(gateMappings);
+        setDepartments(departments || []);
+        setGates(gates || []);
+        setDeptMappings(deptMappings || []);
+        setGateMappings(gateMappings || []);
       })
-      .catch(() => setError('Failed to fetch mapping data'))
+      .catch((err) => {
+        console.error('Failed to fetch mapping data:', err);
+        setError(`Failed to fetch mapping data: ${err.message}`);
+        // Set empty arrays to prevent map errors
+        setDepartments([]);
+        setGates([]);
+        setDeptMappings([]);
+        setGateMappings([]);
+      })
       .finally(() => setLoading(false));
-  }, [selectedEstablishment]);
+  }, [selectedEstablishment, wsToken]);
 
   // Helper: get users for department
   const getDeptUsers = (deptId: number) =>
-    deptMappings.filter((m: any) => m.department_id === deptId && m.status === '2'); // Only show accepted
+    deptMappings.filter((m: UserMapping) => m.department_id === deptId && m.status === '2'); // Only show accepted
 
   // Helper: get user_id by phone (from mappings)
   const getUserIdByPhone = (phone: string) => {
@@ -70,26 +114,31 @@ const Mappings: React.FC = () => {
 
   // Helper: get users for gate
   const getGateUsers = (gateId: number) =>
-    gateMappings.filter((m: any) => m.gate_id === gateId);
+    gateMappings.filter((m: UserMapping) => m.gate_id === gateId);
 
   // Add user to department (status 1 = pending)
   const handleDeptUserAdd = async (deptIdx: number) => {
     const phone = deptInputs[deptIdx]?.trim();
-    if (!phone || !selectedEstablishment?.id) return;
+    if (!phone || !selectedEstablishment?.id || !wsToken) return;
     setLoading(true);
     setError('');
     try {
       const deptId = departments[deptIdx].id;
       const res = await fetch('/api/user_department_map', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${wsToken}`
+        },
         body: JSON.stringify({ establishment_id: selectedEstablishment.id, department_id: deptId, user_phone: phone, status: '1' })
       });
       if (!res.ok) throw new Error('Failed to map user');
       setRequestSent({ type: 'dept', idx: deptIdx });
       setDeptInputs({ ...deptInputs, [deptIdx]: '' });
       // Refresh mappings
-      const updated = await fetch(`/api/user_department_map?establishment_id=${selectedEstablishment.id}`).then(r => r.json());
+      const updated = await fetch(`/api/user_department_map?establishment_id=${selectedEstablishment.id}`, {
+        headers: { 'Authorization': `Bearer ${wsToken}` }
+      }).then(r => r.json());
       setDeptMappings(updated);
     } catch {
       setError('Failed to map user');
@@ -102,21 +151,26 @@ const Mappings: React.FC = () => {
   // Add user to gate (status 1 = pending)
   const handleGateUserAdd = async (gateIdx: number) => {
     const phone = gateInputs[gateIdx]?.trim();
-    if (!phone || !selectedEstablishment?.id) return;
+    if (!phone || !selectedEstablishment?.id || !wsToken) return;
     setLoading(true);
     setError('');
     try {
       const gateId = gates[gateIdx].id;
       const res = await fetch('/api/user_gate_map', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${wsToken}`
+        },
         body: JSON.stringify({ establishment_id: selectedEstablishment.id, gate_id: gateId, user_phone: phone, status: '1' })
       });
       if (!res.ok) throw new Error('Failed to map user');
       setRequestSent({ type: 'gate', idx: gateIdx });
       setGateInputs({ ...gateInputs, [gateIdx]: '' });
       // Refresh mappings
-      const updated = await fetch(`/api/user_gate_map?establishment_id=${selectedEstablishment.id}`).then(r => r.json());
+      const updated = await fetch(`/api/user_gate_map?establishment_id=${selectedEstablishment.id}`, {
+        headers: { 'Authorization': `Bearer ${wsToken}` }
+      }).then(r => r.json());
       setGateMappings(updated);
     } catch {
       setError('Failed to map user');
@@ -142,13 +196,18 @@ const Mappings: React.FC = () => {
 
   // Delete mapping for gate
   const handleGateUserDelete = async (mappingId: number) => {
-    if (!selectedEstablishment?.id) return;
+    if (!selectedEstablishment?.id || !wsToken) return;
     setLoading(true);
     setError('');
     try {
-      await fetch(`/api/user_gate_map/${mappingId}?establishment_id=${selectedEstablishment.id}`, { method: 'DELETE' });
+      await fetch(`/api/user_gate_map/${mappingId}?establishment_id=${selectedEstablishment.id}`, { 
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${wsToken}` }
+      });
       // Refresh mappings
-      const updated = await fetch(`/api/user_gate_map?establishment_id=${selectedEstablishment.id}`).then(r => r.json());
+      const updated = await fetch(`/api/user_gate_map?establishment_id=${selectedEstablishment.id}`, {
+        headers: { 'Authorization': `Bearer ${wsToken}` }
+      }).then(r => r.json());
       setGateMappings(updated);
     } catch {
       setError('Failed to delete mapping');
@@ -174,13 +233,24 @@ const Mappings: React.FC = () => {
           <Tab label="Gates" />
         </Tabs>
       </Paper>
+      {error && (
+        <Box sx={{ mb: 3, p: 2, bgcolor: 'error.light', color: 'error.contrastText', borderRadius: 1 }}>
+          <Typography>{error}</Typography>
+        </Box>
+      )}
       {tab === 0 && (
         <Box>
+          {loading && (
+            <Typography>Loading departments...</Typography>
+          )}
+          {!loading && departments.length === 0 && (
+            <Typography>No departments found.</Typography>
+          )}
           {departments.map((dept, i) => (
             <Paper key={dept.id} sx={{ mb: 3, p: 2 }}>
               <Typography variant="h6">{dept.name}</Typography>
               <List>
-                {getDeptUsers(dept.id).map((mapping: any) => (
+                {getDeptUsers(dept.id).map((mapping: UserMapping) => (
                   <ListItem key={mapping.id} secondaryAction={
                     <IconButton edge="end" aria-label="delete" onClick={() => handleDeptUserDelete(dept.id, mapping.user_id)}>
                       <RemoveCircleOutlineIcon color="error" />
@@ -211,7 +281,9 @@ const Mappings: React.FC = () => {
   // Validate phone exists
   setLoading(true);
   try {
-    const res = await fetch(`/api/check-user-exists?phone=${encodeURIComponent(phone)}`);
+    const res = await fetch(`/api/check-user-exists?phone=${encodeURIComponent(phone)}`, {
+      headers: { 'Authorization': `Bearer ${wsToken}` }
+    });
     const data = await res.json();
     if (!data.exists || !data.user_id) {
       setDeptPhoneErrors(e => ({ ...e, [dept.id]: 'User not found' }));
@@ -256,11 +328,17 @@ const Mappings: React.FC = () => {
       )}
       {tab === 1 && (
         <Box>
+          {loading && (
+            <Typography>Loading gates...</Typography>
+          )}
+          {!loading && gates.length === 0 && (
+            <Typography>No gates found.</Typography>
+          )}
           {gates.map((gate, i) => (
             <Paper key={gate.id} sx={{ mb: 3, p: 2 }}>
               <Typography variant="h6">{gate.name}</Typography>
               <List>
-                {getGateUsers(gate.id).map((mapping: any) => (
+                {getGateUsers(gate.id).map((mapping: UserMapping) => (
                   <ListItem key={mapping.id} secondaryAction={
                     <IconButton edge="end" aria-label="delete" onClick={() => handleGateUserDelete(mapping.id)}>
                       <RemoveCircleOutlineIcon color="error" />
@@ -313,7 +391,10 @@ const Mappings: React.FC = () => {
                   if (addArr.length === 0 && removeArr.length === 0) continue;
                   await fetch('/api/user-department-map/batch-update', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                      'Content-Type': 'application/json',
+                      'Authorization': `Bearer ${wsToken}`
+                    },
                     body: JSON.stringify({
                       department_id: dept.id,
                       add: addArr,
@@ -323,7 +404,9 @@ const Mappings: React.FC = () => {
                 }
                 // Refresh mappings
                 const eid = selectedEstablishment.id;
-                const updated = await fetch(`/api/user_department_map?establishment_id=${eid}`).then(r => r.json());
+                const updated = await fetch(`/api/user_department_map?establishment_id=${eid}`, {
+                  headers: { 'Authorization': `Bearer ${wsToken}` }
+                }).then(r => r.json());
                 setDeptMappings(updated);
                 setDeptAdds({});
                 setDeptRemoves({});

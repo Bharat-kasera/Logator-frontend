@@ -44,9 +44,9 @@ const Home: React.FC = () => {
   const sideMenuItems = [
     { name: 'Dashboard', icon: 'home', path: '/dashboard', active: true },
     { name: 'Establishments', icon: 'building', path: '/create-establishment' },
-    { name: 'Departments', icon: 'users', path: '/dashboard2/departments' },
-    { name: 'Gates', icon: 'lock', path: '/dashboard2/gates' },
-    { name: 'Mappings', icon: 'map', path: '/dashboard2/mappings' },
+    { name: 'Departments', icon: 'users', path: '/dashboard/departments' },
+    { name: 'Gates', icon: 'lock', path: '/dashboard/gates' },
+    { name: 'Mappings', icon: 'map', path: '/dashboard/mappings' },
     { name: 'Analytics', icon: 'chart', path: '/dashboard/analytics' },
     { name: 'Subscriptions', icon: 'credit-card', path: '/subscriptions' },
     { name: 'Profile', icon: 'user', path: '/dashboard/profile' },

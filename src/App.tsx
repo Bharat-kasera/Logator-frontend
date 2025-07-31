@@ -6,6 +6,7 @@ import {
 } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { EstablishmentProvider } from "./contexts/EstablishmentContext";
+import { ToastProvider } from "./components/ToastContainer";
 import LandingPage from "./pages/LandingPage";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -15,7 +16,7 @@ import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
 import Analytics from "./pages/Analytics";
 import Assets from "./pages/Assets";
-import Dashboard2 from "./pages/Dashboard2";
+
 import CompanyUpdate from "./pages/CompanyUpdate";
 import Departments from "./pages/Departments";
 import Gates from "./pages/Gates";
@@ -23,8 +24,11 @@ import Mappings from "./pages/Mappings";
 import Notifications from "./pages/Notifications";
 import Connections from "./pages/Connections";
 import MyQRCode from "./pages/MyQRCode";
+import EstablishmentList from "./components/EstablishmentList";
+import EstablishmentDetails from "./components/EstablishmentDetails";
 
 import NotificationUser from "./pages/NotificationUser";
+import NotificationsPage from "./pages/NotificationsPage";
 import SubscriptionUser from "./pages/SubscriptionUser";
 import SubscripEnt from "./pages/SubscripEnt";
 import VisEntDashboard from "./pages/VisEntDashboard";
@@ -37,9 +41,10 @@ import AssetDebug from "./pages/AssetDebug";
 
 function App() {
   return (
-    <AuthProvider>
-      <EstablishmentProvider>
-        <Router>
+    <ToastProvider>
+      <AuthProvider>
+        <EstablishmentProvider>
+          <Router>
           <Routes>
             {/* Public Routes */}
             <Route path="/" element={<LandingPage />} />
@@ -77,7 +82,17 @@ function App() {
               <Route path="qrcode" element={<MyQRCode />} />
               <Route path="profile" element={<Profile />} />
               <Route path="assets" element={<Assets />} />
+              <Route path="establishments" element={<EstablishmentList />} />
+              <Route
+                path="establishments/:id"
+                element={<EstablishmentDetails />}
+              />
+              <Route path="departments" element={<Departments />} />
+              <Route path="gates" element={<Gates />} />
+              <Route path="mappings" element={<Mappings />} />
+              <Route path="company-update" element={<CompanyUpdate />} />
               <Route path="notificationuser" element={<NotificationUser />} />
+              <Route path="notifications" element={<NotificationsPage />} />
               <Route path="connections" element={<Connections />} />
               <Route path="analytics" element={<Analytics />} />
               <Route path="visentdashboard" element={<VisEntDashboard />} />
@@ -85,28 +100,15 @@ function App() {
               <Route path="georadar-demo" element={<GeoRadarDemo />} />
               <Route path="subscription" element={<SubscriptionUser />} />
             </Route>
-            {/* Debug route for SidePanel */}
-            <Route
-              path="/dashboard2"
-              element={
-                <RequireAuth>
-                  <Dashboard2 />
-                </RequireAuth>
-              }
-            >
-              <Route path="plans" element={<SubscripEnt />} />
-              <Route path="company-update" element={<CompanyUpdate />} />
-              <Route path="departments" element={<Departments />} />
-              <Route path="gates" element={<Gates />} />
-              <Route path="mappings" element={<Mappings />} />
-              <Route path="notifications" element={<Notifications />} />
-            </Route>
+
+
 
             <Route path="/assetdebug" element={<AssetDebug />} />
           </Routes>
-        </Router>
-      </EstablishmentProvider>
-    </AuthProvider>
+          </Router>
+        </EstablishmentProvider>
+      </AuthProvider>
+    </ToastProvider>
   );
 }
 

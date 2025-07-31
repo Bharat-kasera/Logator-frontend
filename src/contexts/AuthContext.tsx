@@ -34,10 +34,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   useEffect(() => {
     const newSocket = io(SOCKET_URL);
     setSocket(newSocket);
+
+    // Authenticate user with socket when we have user info
+    if (user?.id) {
+      newSocket.emit('authenticate', { userId: user.id });
+    }
+
+    // Listen for real-time notifications
+    newSocket.on('notification', (data) => {
+      console.log('Received real-time notification:', data);
+      // You can dispatch to a notification context or show toast here
+      if (data.type === 'invitation_received') {
+        // Show toast notification
+        alert(`New invitation: ${data.message}`);
+      }
+    });
+
     return () => {
       newSocket.close();
     };
-  }, []);
+  }, [user?.id]);
 
   const login = async (phone: string, otp: string, country_code?: string) => {
     try {

@@ -1,11 +1,26 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { api } from "../utils/api";
 
+interface PendingRequest {
+  id: number;
+  type: string;
+  establishment_name: string;
+  firstname?: string;
+  lastname?: string;
+}
+
+interface Establishment {
+  id: number;
+  name: string;
+  plan: number | null;
+  logo?: string;
+}
+
 interface DashboardData {
-  pendingRequests: any[];
-  establishments: any[];
+  pendingRequests: PendingRequest[];
+  establishments: Establishment[];
   stats: {
     total_visitors: number;
     today_visitors: number;
@@ -20,11 +35,41 @@ const Dashboard: React.FC = () => {
   );
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, []);
+  // Helper function to get plan name
+  const getPlanName = (plan: number | null | undefined): string => {
+    if (plan === null || plan === undefined) {
+      return "Basic"; // Default to Basic if no plan specified
+    }
+    
+    const planNumber = Number(plan);
+    switch (planNumber) {
+      case 1:
+        return "Basic";
+      case 2:
+        return "Pro";
+      case 3:
+        return "Enterprise";
+      default:
+        return "Basic"; // Default fallback
+    }
+  };
 
-  const fetchDashboardData = async () => {
+  // Helper function to get plan color
+  const getPlanColor = (plan: number | null | undefined): string => {
+    const planNumber = Number(plan);
+    switch (planNumber) {
+      case 1:
+        return "bg-gray-100 text-gray-800";
+      case 2:
+        return "bg-orange-100 text-orange-800";
+      case 3:
+        return "bg-blue-100 text-blue-800";
+      default:
+        return "bg-gray-100 text-gray-800"; // Default to Basic styling
+    }
+  };
+
+  const fetchDashboardData = useCallback(async () => {
     try {
       const response = await api.get("/dashboard", {
         headers: {
@@ -41,7 +86,11 @@ const Dashboard: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [wsToken]);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, [fetchDashboardData]);
 
   if (loading) {
     return (
@@ -325,20 +374,9 @@ const Dashboard: React.FC = () => {
                                 </h3>
                                 <div className="flex items-center gap-2 mt-1">
                                   <span
-                                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                      establishment.plan === 1
-                                        ? "bg-gray-100 text-gray-800"
-                                        : establishment.plan === 2
-                                        ? "bg-orange-100 text-orange-800"
-                                        : "bg-blue-100 text-blue-800"
-                                    }`}
+                                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPlanColor(establishment.plan)}`}
                                   >
-                                    {establishment.plan === 1
-                                      ? "Basic"
-                                      : establishment.plan === 2
-                                      ? "Pro"
-                                      : "Enterprise"}{" "}
-                                    Plan
+                                    {getPlanName(establishment.plan)} Plan
                                   </span>
                                 </div>
                               </div>
@@ -347,14 +385,14 @@ const Dashboard: React.FC = () => {
                           <div className="flex flex-wrap gap-2 flex-shrink-0">
                             <button
                               onClick={() =>
-                                navigate("/dashboard2/departments")
+                                navigate("/dashboard/departments")
                               }
                               className="px-4 py-2 text-sm bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 transition-colors font-medium"
                             >
                               Departments
                             </button>
                             <button
-                              onClick={() => navigate("/dashboard2/gates")}
+                              onClick={() => navigate("/dashboard/gates")}
                               className="px-4 py-2 text-sm bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors font-medium"
                             >
                               Gates
@@ -455,7 +493,7 @@ const Dashboard: React.FC = () => {
               </div>
               <div className="p-4 sm:p-6 space-y-3">
                 <button
-                  onClick={() => navigate("/dashboard2/departments")}
+                  onClick={() => navigate("/dashboard/departments")}
                   className="w-full text-left px-4 py-3 bg-gray-50 hover:bg-orange-50 rounded-lg transition-colors group"
                 >
                   <div className="flex items-center">
@@ -481,7 +519,7 @@ const Dashboard: React.FC = () => {
                 </button>
 
                 <button
-                  onClick={() => navigate("/dashboard2/gates")}
+                  onClick={() => navigate("/dashboard/gates")}
                   className="w-full text-left px-4 py-3 bg-gray-50 hover:bg-orange-50 rounded-lg transition-colors group"
                 >
                   <div className="flex items-center">
@@ -507,7 +545,7 @@ const Dashboard: React.FC = () => {
                 </button>
 
                 <button
-                  onClick={() => navigate("/dashboard2/mappings")}
+                  onClick={() => navigate("/dashboard/mappings")}
                   className="w-full text-left px-4 py-3 bg-gray-50 hover:bg-orange-50 rounded-lg transition-colors group"
                 >
                   <div className="flex items-center">

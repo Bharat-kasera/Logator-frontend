@@ -12,8 +12,10 @@ const PrivateRoute: React.FC<{ children?: React.ReactNode }> = ({ children }) =>
     return <Navigate to="/login" replace />;
   }
 
-  // For dashboard2, require establishmentId
-  if (location.pathname.startsWith('/dashboard2')) {
+  // For dashboard routes, require establishmentId when needed
+  if (location.pathname.startsWith('/dashboard/') && 
+      !location.pathname.includes('/dashboard/profile') && 
+      !location.pathname.includes('/dashboard/assets')) {
     const establishmentId = localStorage.getItem('establishmentId');
     if (!establishmentId) {
       return <Navigate to="/assets" replace />;

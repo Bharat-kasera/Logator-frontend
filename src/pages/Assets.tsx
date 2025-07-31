@@ -1,42 +1,28 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import CreateEstablishment from "../components/CreateEstablishment";
 import { useEstablishment } from '../contexts/EstablishmentContext';
-import {
-  Box,
-  Button,
-  Typography,
-  Alert,
-  List,
-  ListItem,
-  ListItemText
-} from "@mui/material";
 
 const Assets: React.FC = () => {
   const navigate = useNavigate();
   const { user, wsToken } = useAuth();
   const { setSelectedEstablishment } = useEstablishment();
   const userId = user?.id;
-  // Use plan as string for all logic
   const userPlan = user?.plan;
-  // If you want to debug, uncomment:
-  // console.log('userPlan', userPlan, typeof userPlan);
-
-
   const [establishments, setEstablishments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [showCreate, setShowCreate] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
+  const [assets, setAssets] = useState<any[]>([]);
 
-  // Fetch establishments for the logged-in user on mount
+  // Fetch establishments and assets for the logged-in user on mount
   useEffect(() => {
     if (!wsToken || !userId) return;
-    const fetchEstablishments = async () => {
+    const fetchData = async () => {
       setLoading(true);
       setError("");
       try {
+        // Fetch establishments
         const res = await fetch(`/api/establishments/by-user/${userId}`, {
           headers: {
             "Authorization": `Bearer ${wsToken}`,
@@ -45,14 +31,22 @@ const Assets: React.FC = () => {
         if (!res.ok) throw new Error("Failed to fetch establishments");
         const data = await res.json();
         setEstablishments(data);
+
+        // Mock assets data for now
+        setAssets([
+          { id: 1, name: 'Security Camera System', type: 'Equipment', establishment: 'Main Office', status: 'Active', value: '$15,000', location: 'Lobby' },
+          { id: 2, name: 'Badge Printer', type: 'Equipment', establishment: 'Main Office', status: 'Active', value: '$800', location: 'Reception' },
+          { id: 3, name: 'Access Control Panel', type: 'System', establishment: 'North Building', status: 'Maintenance', value: '$5,000', location: 'Security Room' },
+          { id: 4, name: 'Visitor Management Kiosk', type: 'Equipment', establishment: 'South Branch', status: 'Active', value: '$2,500', location: 'Entrance' },
+        ]);
       } catch (err: any) {
-        setError(err.message || "Failed to fetch establishments");
+        setError(err.message || "Failed to fetch data");
       } finally {
         setLoading(false);
       }
     };
-    fetchEstablishments();
-  }, [wsToken, userId, successMsg]);
+    fetchData();
+  }, [wsToken, userId]);
 
   const handleEstablishmentClick = (est: any) => {
     // Save gst and pan number explicitly along with all details
@@ -61,7 +55,7 @@ const Assets: React.FC = () => {
       gst: est.gst_number || est.gst || '',
       pan: est.pan_number || est.pan || ''
     });
-    navigate('/dashboard2');
+            navigate('/dashboard');
   };
 
   // Determine if user can create a new establishment based on plan and count

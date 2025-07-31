@@ -72,7 +72,7 @@ const CreateEstablishment: React.FC = () => {
         throw new Error(errorData.message || 'Failed to create establishment');
       }
 
-      const result = await response.json();
+      await response.json();
       setMessage('✅ Establishment created successfully!');
       
       // Reset form
@@ -92,8 +92,14 @@ const CreateEstablishment: React.FC = () => {
         navigate('/dashboard');
       }, 2000);
 
-    } catch (error: any) {
-      setMessage(`❌ ${error.message}`);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred';
+      if (errorMessage.includes('Session expired') || errorMessage.includes('expired')) {
+        setMessage('❌ Your session has expired. Redirecting to login...');
+        // The API utility will handle the redirect automatically
+      } else {
+        setMessage(`❌ ${errorMessage}`);
+      }
     } finally {
       setLoading(false);
     }
@@ -271,19 +277,22 @@ const CreateEstablishment: React.FC = () => {
             </div>
 
             {/* Plan Information */}
-            {user?.plan && (
+            {user && (
               <div className="bg-orange-50 rounded-lg p-4">
                 <h3 className="font-medium text-gray-900 mb-2">Plan Information</h3>
                 <p className="text-sm text-gray-600">
                   Current user plan: <span className="font-medium">
-                    {user.plan === 1 ? 'Basic' : user.plan === 2 ? 'Pro' : user.plan === 3 ? 'Enterprise' : 'Unknown'}
+                    {user.plan == 1 || user.plan === '1' ? 'Basic' : 
+                     user.plan == 2 || user.plan === '2' ? 'Pro' : 
+                     user.plan == 3 || user.plan === '3' ? 'Enterprise' : 
+                     user.plan ? `Unknown (${user.plan})` : 'Basic (Default)'}
                   </span>
                 </p>
                 <p className="text-sm text-gray-600">
                   Establishment plan: <span className="font-medium">
-                    {user.plan === 3 ? 'Pro (Auto-upgraded from Enterprise)' : 
-                     user.plan === 2 ? 'Pro' : 
-                     user.plan === 1 ? 'Basic' : 'Unknown'}
+                    {user.plan == 3 || user.plan === '3' ? 'Pro (Auto-upgraded from Enterprise)' : 
+                     user.plan == 2 || user.plan === '2' ? 'Pro' : 
+                     (user.plan == 1 || user.plan === '1' || !user.plan) ? 'Basic' : `Unknown (${user.plan})`}
                   </span>
                 </p>
               </div>

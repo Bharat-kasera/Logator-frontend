@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useEstablishment } from "../contexts/EstablishmentContext";
 import { useAuth } from "../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
+import InviteDepartmentUserModal from "../components/InviteDepartmentUserModal";
 
 interface Department {
   id: number;
@@ -10,7 +11,7 @@ interface Department {
 }
 
 const Departments: React.FC = () => {
-  const { selectedEstablishment } = useEstablishment();
+  const { selectedEstablishment, setSelectedEstablishment } = useEstablishment();
   const { wsToken } = useAuth();
   const navigate = useNavigate();
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -18,10 +19,12 @@ const Departments: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [selectedDepartmentForInvite, setSelectedDepartmentForInvite] = useState<Department | null>(null);
 
-  // Plan logic
-  const plan = selectedEstablishment?.plan;
-  const maxDepartments = plan === 1 ? 1 : plan === 2 ? 10 : Infinity;
+  // Plan logic - ensure we have a valid plan number
+  const plan = Number(selectedEstablishment?.plan) || 1; // Convert to number and default to Basic if undefined
+  const maxDepartments = plan === 1 ? 1 : Infinity; // Basic: 1 department, Pro & Enterprise: unlimited
   const isBasic = plan === 1;
   const isPro = plan === 2;
   const isEnterprise = plan === 3;
@@ -86,8 +89,8 @@ const Departments: React.FC = () => {
 
       // Clear success message after 3 seconds
       setTimeout(() => setSuccess(""), 3000);
-    } catch (err: any) {
-      setError(`❌ ${err.message}`);
+    } catch (err: unknown) {
+      setError(`❌ ${err instanceof Error ? err.message : 'An unexpected error occurred'}`);
     } finally {
       setLoading(false);
     }
@@ -115,24 +118,28 @@ const Departments: React.FC = () => {
 
       // Clear success message after 3 seconds
       setTimeout(() => setSuccess(""), 3000);
-    } catch (err: any) {
-      setError(`❌ ${err.message}`);
+    } catch (err: unknown) {
+      setError(`❌ ${err instanceof Error ? err.message : 'An unexpected error occurred'}`);
     } finally {
       setLoading(false);
     }
   };
 
   const getPlanName = () => {
-    if (isBasic) return "Basic";
-    if (isPro) return "Pro";
-    if (isEnterprise) return "Enterprise";
+    const plan = selectedEstablishment?.plan;
+    const planNum = Number(plan); // Convert to number to handle string/number mismatch
+    if (planNum === 1) return "Basic";
+    if (planNum === 2) return "Pro";
+    if (planNum === 3) return "Enterprise";
     return "Unknown";
   };
 
   const getPlanDescription = () => {
-    if (isBasic) return "Basic plan allows only 1 department";
-    if (isPro) return "Pro plan allows up to 10 departments";
-    if (isEnterprise) return "Enterprise plan allows unlimited departments";
+    const plan = selectedEstablishment?.plan;
+    const planNum = Number(plan); // Convert to number to handle string/number mismatch
+    if (planNum === 1) return "Basic plan allows only 1 department";
+    if (planNum === 2) return "Pro plan allows unlimited departments";
+    if (planNum === 3) return "Enterprise plan allows unlimited departments";
     return "Unknown plan limits";
   };
 
@@ -274,10 +281,11 @@ const Departments: React.FC = () => {
         )}
 
         {/* Add Department Form */}
-        <div className="bg-white rounded-xl shadow-lg border border-orange-100 p-6 mb-8">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Add New Department
-          </h3>
+        {departments.length < maxDepartments && (
+          <div className="bg-white rounded-xl shadow-lg border border-orange-100 p-6 mb-8">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Add New Department
+            </h3>
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <input
@@ -337,12 +345,35 @@ const Departments: React.FC = () => {
               )}
             </button>
           </div>
-          {departments.length >= maxDepartments && (
-            <p className="mt-3 text-sm text-gray-500">
-              You have reached the maximum number of departments for your plan.
-            </p>
-          )}
         </div>
+        )}
+
+        {/* Plan Limit Reached Message */}
+        {departments.length >= maxDepartments && (
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 mb-8">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 15.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-amber-800">Plan Limit Reached</h3>
+                <div className="mt-2 text-sm text-amber-700">
+                  <p>You have reached the maximum number of departments for your {getPlanName()} plan. To add more departments, consider upgrading to a higher plan.</p>
+                </div>
+                <div className="mt-4">
+                  <button
+                    onClick={() => navigate('/subscriptions')}
+                    className="text-sm bg-amber-100 hover:bg-amber-200 text-amber-800 font-medium py-2 px-3 rounded-lg transition-colors"
+                  >
+                    Upgrade Plan
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Departments List */}
         <div className="bg-white rounded-xl shadow-lg border border-orange-100 overflow-hidden">
@@ -428,32 +459,61 @@ const Departments: React.FC = () => {
                       </p>
                     </div>
                   </div>
-                  <button
-                    onClick={() => handleDelete(department.id)}
-                    disabled={loading}
-                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    title="Delete department"
-                  >
-                    <svg
-                      className="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => {
+                        setSelectedDepartmentForInvite(department);
+                        setShowInviteModal(true);
+                      }}
+                      disabled={loading}
+                      className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      title="Invite user to department"
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                      />
-                    </svg>
-                  </button>
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={() => handleDelete(department.id)}
+                      disabled={loading}
+                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      title="Delete department"
+                    >
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                        />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
           )}
         </div>
       </main>
+
+      {/* Invite User Modal */}
+      <InviteDepartmentUserModal
+        isOpen={showInviteModal}
+        onClose={() => {
+          setShowInviteModal(false);
+          setSelectedDepartmentForInvite(null);
+        }}
+        onInviteSent={() => {
+          setSuccess('Department invitation sent successfully!');
+          setTimeout(() => setSuccess(''), 3000);
+        }}
+        preSelectedDepartmentId={selectedDepartmentForInvite?.id}
+      />
     </div>
   );
 };

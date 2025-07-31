@@ -8,6 +8,11 @@ const isProduction = import.meta.env.PROD;
 
 // Use environment variables if available, otherwise fallback based on environment
 const getApiUrl = () => {
+  // FORCE LOCAL DEVELOPMENT - comment out for production
+  if (!isProduction) {
+    return "http://localhost:4001/api";
+  }
+  
   // If explicit environment variable is set, use it
   if (import.meta.env.VITE_API_URL) {
     return import.meta.env.VITE_API_URL;
@@ -28,11 +33,16 @@ const getApiUrl = () => {
     }
     return `${backendUrl.replace(/\/$/, "")}/api`;
   }
-  // In development, use local backend
+  // In development, use local backend (FORCE LOCAL FOR DEVELOPMENT)
   return "http://localhost:4001/api";
 };
 
 const getSocketUrl = () => {
+  // FORCE LOCAL DEVELOPMENT - comment out for production
+  if (!isProduction) {
+    return "http://localhost:4001";
+  }
+
   // If explicit environment variable is set, use it
   if (import.meta.env.VITE_SOCKET_URL) {
     return import.meta.env.VITE_SOCKET_URL;

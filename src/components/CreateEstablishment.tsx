@@ -63,7 +63,7 @@ const CreateEstablishment: React.FC<CreateEstablishmentProps> = ({ onCreated, us
       plan: estPlan,
     };
     try {
-      const res = await fetch("/api/create-establishment", {
+      const res = await fetch("/api/establishments/create-establishment", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -71,6 +71,14 @@ const CreateEstablishment: React.FC<CreateEstablishmentProps> = ({ onCreated, us
         },
         body: JSON.stringify(payload),
       });
+
+      // Handle 401 Unauthorized (token expired)
+      if (res.status === 401) {
+        localStorage.removeItem("wsToken");
+        localStorage.removeItem("user");
+        window.location.href = "/login";
+        throw new Error("Session expired. Please log in again.");
+      }
       if (!res.ok) {
         // Try to parse JSON error, fallback to text, fallback to generic
         let errMsg = "Failed to create establishment";

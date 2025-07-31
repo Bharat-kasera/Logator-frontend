@@ -1,15 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 
 interface Invitation {
-  gate_dept_id: number;
-  type: string;
+  id: number;
+  gate_id?: number;
+  department_id?: number;
+  status: string;
   created_at: string;
   establishment_id: number;
   establishment_name: string;
-  target_name: string;
-  invited_by_firstname: string;
-  invited_by_lastname: string;
+  gate_name?: string;
+  department_name?: string;
+  invitation_type: 'gate' | 'department';
+  owner_id: number;
 }
 
 const NotificationUser: React.FC = () => {
@@ -19,14 +22,10 @@ const NotificationUser: React.FC = () => {
   const [respondingTo, setRespondingTo] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchInvitations();
-  }, []);
-
-  const fetchInvitations = async () => {
+  const fetchInvitations = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/notifications/user', {
+      const response = await fetch('/api/requests/pending', {
         headers: {
           'Authorization': `Bearer ${wsToken}`,
         },
@@ -34,7 +33,7 @@ const NotificationUser: React.FC = () => {
 
       if (response.ok) {
         const data = await response.json();
-        setInvitations(data.invitations);
+        setInvitations(data.requests);
       } else {
         setError('Failed to fetch invitations');
       }
@@ -44,43 +43,42 @@ const NotificationUser: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [wsToken]);
+
+  useEffect(() => {
+    fetchInvitations();
+  }, [fetchInvitations]);
 
   const handleResponse = async (invitation: Invitation, action: 'accept' | 'decline') => {
-    const invitationKey = `${invitation.gate_dept_id}-${invitation.type}-${invitation.establishment_id}`;
+    const invitationKey = `${invitation.id}`;
     
     try {
       setRespondingTo(invitationKey);
-      const response = await fetch('/api/notifications/user/respond', {
+      setError(null);
+
+      const apiResponse = await fetch(`/api/requests/${invitation.id}/respond`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${wsToken}`,
         },
-        body: JSON.stringify({
-          gate_dept_id: invitation.gate_dept_id,
-          type: invitation.type,
-          establishment_id: invitation.establishment_id,
-          action,
-        }),
+        body: JSON.stringify({ response: action }),
       });
 
-      if (response.ok) {
-        // Remove the invitation from the list
-        setInvitations(prev => 
-          prev.filter(inv => 
-            !(inv.gate_dept_id === invitation.gate_dept_id && 
-              inv.type === invitation.type && 
-              inv.establishment_id === invitation.establishment_id)
-          )
-        );
+      if (apiResponse.ok) {
+        // Remove the invitation from the list since it's no longer pending
+        setInvitations(prev => prev.filter(inv => inv.id !== invitation.id));
+        
+        // Show success message briefly
+        const successMessage = `Invitation ${action}${action === 'accept' ? 'ed' : 'd'} successfully!`;
+        console.log(successMessage);
       } else {
-        const errorData = await response.json();
+        const errorData = await apiResponse.json();
         setError(errorData.message || `Failed to ${action} invitation`);
       }
     } catch (error) {
       console.error(`Error ${action}ing invitation:`, error);
-      setError(`Failed to ${action} invitation`);
+      setError(`Failed to ${action} invitation. Please try again.`);
     } finally {
       setRespondingTo(null);
     }
@@ -226,7 +224,7 @@ const NotificationUser: React.FC = () => {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {invitations.map((invitation, index) => {
-                    const invitationKey = `${invitation.gate_dept_id}-${invitation.type}-${invitation.establishment_id}`;
+                    const invitationKey = `${invitation.id}`;
                     const isResponding = respondingTo === invitationKey;
                     
                     return (
@@ -239,20 +237,20 @@ const NotificationUser: React.FC = () => {
                         <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                              invitation.type === 'D' 
+                              invitation.invitation_type === 'department' 
                                 ? 'bg-blue-100 text-blue-800' 
                                 : 'bg-green-100 text-green-800'
                             }`}>
-                              {invitation.type === 'D' ? 'Department' : 'Gate'}
+                              {invitation.invitation_type === 'department' ? 'Department' : 'Gate'}
                             </span>
                             <span className="ml-2 text-sm text-gray-900 font-medium">
-                              {invitation.target_name}
+                              {invitation.invitation_type === 'department' ? invitation.department_name : invitation.gate_name}
                             </span>
                           </div>
                         </td>
                         <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-900">
-                            {invitation.invited_by_firstname} {invitation.invited_by_lastname}
+                            Establishment Owner
                           </div>
                         </td>
                         <td className="px-4 sm:px-6 py-4 whitespace-nowrap">

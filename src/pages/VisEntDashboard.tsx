@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Box, Typography, Button, Card, CardContent, TextField, Grid } from '@mui/material';
-import GeoRadarDemo from './GeoRadarDemo';
+import { useAuth } from '../contexts/AuthContext';
+import { useEstablishment } from '../contexts/EstablishmentContext';
 
 const establishments = [
   { name: 'Establishment 1', gate: 'North Gate', coords: [12.9716, 77.5946] },
@@ -23,9 +23,13 @@ function haversineDistance([lat1, lon1]: number[], [lat2, lon2]: number[]) {
 
 const VisEntDashboard: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { selectedEstablishment } = useEstablishment();
   const [userCoords, setUserCoords] = useState<[number, number] | null>(null);
   const [radius, setRadius] = useState<number>(10);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [nearbyEstablishments, setNearbyEstablishments] = useState<any[]>([]);
 
   useEffect(() => {
     if (!navigator.geolocation) {
@@ -35,6 +39,36 @@ const VisEntDashboard: React.FC = () => {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setUserCoords([pos.coords.latitude, pos.coords.longitude]);
+        // Mock nearby establishments based on location
+        setNearbyEstablishments([
+          { 
+            id: 1, 
+            name: 'Main Office Building', 
+            gate: 'North Gate', 
+            distance: 0.5, 
+            coords: [pos.coords.latitude + 0.001, pos.coords.longitude + 0.001],
+            description: 'Corporate headquarters with visitor check-in',
+            status: 'Open'
+          },
+          { 
+            id: 2, 
+            name: 'South Campus', 
+            gate: 'Main Entrance', 
+            distance: 1.2, 
+            coords: [pos.coords.latitude - 0.002, pos.coords.longitude + 0.003],
+            description: 'Secondary office location',
+            status: 'Open'
+          },
+          { 
+            id: 3, 
+            name: 'Tech Center', 
+            gate: 'Security Gate', 
+            distance: 2.8, 
+            coords: [pos.coords.latitude + 0.005, pos.coords.longitude - 0.002],
+            description: 'Research and development facility',
+            status: 'Restricted'
+          }
+        ]);
       },
       () => {
         setError('Unable to retrieve your location.');
