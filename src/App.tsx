@@ -16,6 +16,7 @@ import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
 import Analytics from "./pages/Analytics";
 import Assets from "./pages/Assets";
+import Settings from "./pages/Settings";
 
 import CompanyUpdate from "./pages/CompanyUpdate";
 import Departments from "./pages/Departments";
@@ -36,8 +37,8 @@ import VisGateEntry from "./pages/VisGateEntry";
 import GeoRadarDemo from "./pages/GeoRadarDemo";
 import CreateEstablishment from "./pages/createestablishment";
 import Subscriptions from "./pages/subscriptions";
-import "./index.css";
 import AssetDebug from "./pages/AssetDebug";
+import "./index.css";
 
 function App() {
   return (
@@ -81,6 +82,7 @@ function App() {
               <Route index element={<Dashboard />} />
               <Route path="qrcode" element={<MyQRCode />} />
               <Route path="profile" element={<Profile />} />
+              <Route path="settings" element={<Settings />} />
               <Route path="assets" element={<Assets />} />
               <Route path="establishments" element={<EstablishmentList />} />
               <Route
