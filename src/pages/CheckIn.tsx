@@ -3,6 +3,8 @@ import { useAuth } from "../contexts/AuthContext";
 import Webcam from "react-webcam";
 import QRScanner from "../components/QRScanner";
 import { PhoneInput } from "../components/PhoneInput";
+import { isValidLogatorQR, extractQRHash } from "../utils/qrUtils";
+import { api } from "../utils/api";
 
 interface AuthorizedGate {
   id: number;
@@ -236,9 +238,40 @@ export default function CheckIn() {
 
   const handleQRScan = async (qrData: string) => {
     try {
-      // Assuming QR contains phone number or user ID
-      const phoneNumber = qrData; // You might need to parse this differently
+      console.log('QR Data scanned:', qrData);
       
+      // Check if it's a valid Logator QR code
+      if (!isValidLogatorQR(qrData)) {
+        setError('Invalid QR code format. Please use a valid Logator QR code.');
+        return;
+      }
+
+      // Extract hash and resolve to user information
+      const qrHash = extractQRHash(qrData);
+      if (!qrHash) {
+        setError('Failed to process QR code hash.');
+        return;
+      }
+
+      // Resolve QR hash to user information via backend
+      const response = await api.post('/qr/resolve', { qrHash }, {
+        headers: {
+          Authorization: `Bearer ${wsToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        setError(errorData.message || 'Failed to resolve QR code');
+        return;
+      }
+
+      const userData = await response.json();
+      const phoneNumber = userData.phoneNumber;
+      
+      console.log('Resolved phone number:', phoneNumber);
+      
+      // Continue with existing check-in flow using resolved phone number
       const hasDuplicate = await checkForDuplicateCheckIn(phoneNumber);
       if (hasDuplicate) {
         return;
@@ -255,7 +288,8 @@ export default function CheckIn() {
         resetToGateSelection();
       }
     } catch (error) {
-      setError('Failed to process QR code');
+      console.error('QR scan error:', error);
+      setError('Failed to process QR code. Please try again or use phone number entry.');
     }
   };
 

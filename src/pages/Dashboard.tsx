@@ -1,48 +1,63 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React from "react";
 import { useAuth } from "../contexts/AuthContext";
+import { useData } from "../contexts/DataContext";
 import { useNavigate } from "react-router-dom";
-import { api } from "../utils/api";
+import LoadingSpinner from "../components/LoadingSpinner";
 
-interface PendingRequest {
-  id: number;
-  type: string;
-  establishment_name: string;
-  firstname?: string;
-  lastname?: string;
-}
-
-interface Establishment {
-  id: number;
-  name: string;
-  plan: number | null;
-  logo?: string;
-}
-
-interface DashboardData {
-  pendingRequests: PendingRequest[];
-  establishments: Establishment[];
-  stats: {
-    total_visitors: number;
-    today_visitors: number;
-  };
-}
+// Interfaces are now imported from DataContext
 
 const Dashboard: React.FC = () => {
-  const { wsToken, user } = useAuth();
+  const { user, isInitialDataLoaded } = useAuth();
+  const { 
+    companies,
+    establishments, 
+    pendingRequests, 
+    dashboardStats, 
+    hasEstablishments,
+    isLoadingDashboard,
+    isLoadingEstablishments
+  } = useData();
   const navigate = useNavigate();
-  const [dashboardData, setDashboardData] = useState<DashboardData | null>(
-    null
-  );
-  const [loading, setLoading] = useState(true);
+
+  // Helper function to get primary company for redirects
+  const getPrimaryCompany = () => {
+    return companies.length > 0 ? companies[0] : null;
+  };
+
+  // Smart navigation functions
+  const navigateToEstablishments = () => {
+    const primaryCompany = getPrimaryCompany();
+    if (primaryCompany?.uuid) {
+      navigate(`/company/${primaryCompany.uuid}/establishments`);
+    } else {
+      navigate("/dashboard/companies");
+    }
+  };
+
+  const navigateToDepartments = () => {
+    const primaryCompany = getPrimaryCompany();
+    if (primaryCompany?.uuid) {
+      navigate(`/company/${primaryCompany.uuid}/dashboard`);
+    } else {
+      navigate("/dashboard/companies");
+    }
+  };
+
+  const navigateToGates = () => {
+    const primaryCompany = getPrimaryCompany();
+    if (primaryCompany?.uuid) {
+      navigate(`/company/${primaryCompany.uuid}/dashboard`);
+    } else {
+      navigate("/dashboard/companies");
+    }
+  };
+  
+  const loading = !isInitialDataLoaded || isLoadingDashboard || isLoadingEstablishments;
 
   // Helper function to get plan name
-  const getPlanName = (plan: number | null | undefined): string => {
-    if (plan === null || plan === undefined) {
-      return "Basic"; // Default to Basic if no plan specified
-    }
-    
-    const planNumber = Number(plan);
-    switch (planNumber) {
+  const getPlanName = (plan?: number): string => {
+    if (plan === undefined || plan === null) return "Basic";
+    switch (plan) {
       case 1:
         return "Basic";
       case 2:
@@ -50,7 +65,7 @@ const Dashboard: React.FC = () => {
       case 3:
         return "Enterprise";
       default:
-        return "Basic"; // Default fallback
+        return "Basic";
     }
   };
 
@@ -69,56 +84,14 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  const fetchDashboardData = useCallback(async () => {
-    try {
-      const response = await api.get("/dashboard", {
-        headers: {
-          Authorization: `Bearer ${wsToken}`,
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setDashboardData(data);
-      }
-    } catch (error) {
-      console.error("Error fetching dashboard data:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, [wsToken]);
-
-  useEffect(() => {
-    fetchDashboardData();
-  }, [fetchDashboardData]);
-
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-white flex items-center justify-center">
-        <div className="text-center">
-          <svg
-            className="animate-spin -ml-1 mr-3 h-12 w-12 text-orange-500 mx-auto"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <circle
-              className="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              strokeWidth="4"
-            ></circle>
-            <path
-              className="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-            ></path>
-          </svg>
-          <p className="mt-2 text-gray-600">Loading dashboard...</p>
-        </div>
-      </div>
+      <LoadingSpinner 
+        size="xl" 
+        color="orange" 
+        message="Loading dashboard..." 
+        fullScreen={true}
+      />
     );
   }
 
@@ -129,7 +102,7 @@ const Dashboard: React.FC = () => {
         {/* Welcome Section */}
         <div className="mb-6 sm:mb-8">
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
-            Welcome back,{" "}
+            Welcome,{" "}
             <span className="text-orange-500">{user?.firstname || "User"}</span>
           </h1>
           <p className="text-gray-600 text-sm sm:text-base lg:text-lg">
@@ -140,7 +113,7 @@ const Dashboard: React.FC = () => {
         {/* Quick Actions */}
         <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row gap-3 sm:gap-4">
           <button
-            onClick={() => navigate("/create-establishment")}
+            onClick={navigateToEstablishments}
             className="flex items-center justify-center px-4 sm:px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 font-medium transition-colors shadow-md hover:shadow-lg text-sm sm:text-base"
           >
             <svg
@@ -156,7 +129,7 @@ const Dashboard: React.FC = () => {
                 d="M12 4v16m8-8H4"
               />
             </svg>
-            Create Establishment
+            Manage Establishments
           </button>
 
           <button
@@ -180,80 +153,134 @@ const Dashboard: React.FC = () => {
           </button>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
-          {/* Total Visitors */}
-          <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-orange-100 hover:shadow-xl transition-shadow">
-            <div className="flex items-center justify-between">
-              <div className="min-w-0">
-                <p className="text-sm font-medium text-gray-600 truncate">
-                  Total Visitors
-                </p>
-                <p className="text-2xl sm:text-3xl font-bold text-gray-900">
-                  {dashboardData?.stats.total_visitors || 0}
-                </p>
+        {/* Stats Cards - Only show if user has establishments */}
+        {hasEstablishments && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
+            {/* Total Visitors */}
+            <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-orange-100 hover:shadow-xl transition-shadow">
+              <div className="flex items-center justify-between">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-gray-600 truncate">
+                    Total Visitors
+                  </p>
+                  <p className="text-2xl sm:text-3xl font-bold text-gray-900">
+                    {dashboardStats?.total_visitors || 0}
+                  </p>
+                </div>
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <svg
+                    className="w-5 h-5 sm:w-6 sm:h-6 text-orange-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                    />
+                  </svg>
+                </div>
               </div>
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                <svg
-                  className="w-5 h-5 sm:w-6 sm:h-6 text-orange-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                  />
-                </svg>
+            </div>
+
+            {/* Today's Visitors */}
+            <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-orange-100 hover:shadow-xl transition-shadow">
+              <div className="flex items-center justify-between">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-gray-600 truncate">
+                    Today's Visitors
+                  </p>
+                  <p className="text-2xl sm:text-3xl font-bold text-green-600">
+                    {dashboardStats?.today_visitors || 0}
+                  </p>
+                </div>
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <svg
+                    className="w-5 h-5 sm:w-6 sm:h-6 text-green-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            {/* Establishments */}
+            <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-orange-100 hover:shadow-xl transition-shadow">
+              <div className="flex items-center justify-between">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-gray-600 truncate">
+                    Establishments
+                  </p>
+                  <p className="text-2xl sm:text-3xl font-bold text-blue-600">
+                    {establishments.length}
+                  </p>
+                </div>
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <svg
+                    className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                    />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            {/* Pending Requests */}
+            <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-orange-100 hover:shadow-xl transition-shadow">
+              <div className="flex items-center justify-between">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-gray-600 truncate">
+                    Pending Requests
+                  </p>
+                  <p className="text-2xl sm:text-3xl font-bold text-yellow-600">
+                    {pendingRequests.length}
+                  </p>
+                </div>
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-yellow-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <svg
+                    className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                </div>
               </div>
             </div>
           </div>
+        )}
 
-          {/* Today's Visitors */}
-          <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-orange-100 hover:shadow-xl transition-shadow">
-            <div className="flex items-center justify-between">
-              <div className="min-w-0">
-                <p className="text-sm font-medium text-gray-600 truncate">
-                  Today's Visitors
-                </p>
-                <p className="text-2xl sm:text-3xl font-bold text-green-600">
-                  {dashboardData?.stats.today_visitors || 0}
-                </p>
-              </div>
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+        {/* Welcome section for users without establishments */}
+        {!hasEstablishments && (
+          <div className="mb-8 bg-white rounded-xl shadow-lg p-8 border border-orange-100">
+            <div className="text-center">
+              <div className="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-6">
                 <svg
-                  className="w-5 h-5 sm:w-6 sm:h-6 text-green-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </div>
-            </div>
-          </div>
-
-          {/* Establishments */}
-          <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-orange-100 hover:shadow-xl transition-shadow">
-            <div className="flex items-center justify-between">
-              <div className="min-w-0">
-                <p className="text-sm font-medium text-gray-600 truncate">
-                  Establishments
-                </p>
-                <p className="text-2xl sm:text-3xl font-bold text-blue-600">
-                  {dashboardData?.establishments.length || 0}
-                </p>
-              </div>
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                <svg
-                  className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600"
+                  className="w-10 h-10 text-orange-600"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -266,38 +293,15 @@ const Dashboard: React.FC = () => {
                   />
                 </svg>
               </div>
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">
+                Welcome to Logator.io!
+              </h2>
+              <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
+                Get started by creating your first establishment to begin managing visitors, departments, and gates effectively.
+              </p>
             </div>
           </div>
-
-          {/* Pending Requests */}
-          <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-orange-100 hover:shadow-xl transition-shadow">
-            <div className="flex items-center justify-between">
-              <div className="min-w-0">
-                <p className="text-sm font-medium text-gray-600 truncate">
-                  Pending Requests
-                </p>
-                <p className="text-2xl sm:text-3xl font-bold text-yellow-600">
-                  {dashboardData?.pendingRequests.length || 0}
-                </p>
-              </div>
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-yellow-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                <svg
-                  className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </div>
-            </div>
-          </div>
-        </div>
+        )}
 
         {/* Main Content Grid */}
         <div className="grid lg:grid-cols-3 gap-6 sm:gap-8">
@@ -313,7 +317,7 @@ const Dashboard: React.FC = () => {
                 </p>
               </div>
               <div className="p-4 sm:p-6">
-                {dashboardData?.establishments.length === 0 ? (
+                {!hasEstablishments ? (
                   <div className="text-center py-12">
                     <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
                       <svg
@@ -345,7 +349,7 @@ const Dashboard: React.FC = () => {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {dashboardData?.establishments.map((establishment) => (
+                    {establishments.map((establishment) => (
                       <div
                         key={establishment.id}
                         className="border border-gray-200 rounded-lg p-4 sm:p-6 hover:border-orange-300 hover:shadow-md transition-all"
@@ -384,15 +388,13 @@ const Dashboard: React.FC = () => {
                           </div>
                           <div className="flex flex-wrap gap-2 flex-shrink-0">
                             <button
-                              onClick={() =>
-                                navigate("/dashboard/departments")
-                              }
+                              onClick={navigateToDepartments}
                               className="px-4 py-2 text-sm bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 transition-colors font-medium"
                             >
                               Departments
                             </button>
                             <button
-                              onClick={() => navigate("/dashboard/gates")}
+                              onClick={navigateToGates}
                               className="px-4 py-2 text-sm bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors font-medium"
                             >
                               Gates
@@ -420,7 +422,7 @@ const Dashboard: React.FC = () => {
                 </p>
               </div>
               <div className="p-4 sm:p-6">
-                {dashboardData?.pendingRequests.length === 0 ? (
+                {pendingRequests.length === 0 ? (
                   <div className="text-center py-8">
                     <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
                       <svg
@@ -441,7 +443,7 @@ const Dashboard: React.FC = () => {
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {dashboardData?.pendingRequests
+                    {pendingRequests
                       .slice(0, 5)
                       .map((request, index) => (
                         <div
@@ -481,96 +483,98 @@ const Dashboard: React.FC = () => {
               </div>
             </div>
 
-            {/* Quick Actions */}
-            <div className="bg-white rounded-xl shadow-lg border border-orange-100 overflow-hidden">
-              <div className="px-4 sm:px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-blue-100">
-                <h3 className="text-lg font-semibold text-gray-900">
-                  Quick Actions
-                </h3>
-                <p className="text-sm text-gray-600 mt-1">
-                  Common tasks and shortcuts
-                </p>
-              </div>
-              <div className="p-4 sm:p-6 space-y-3">
-                <button
-                  onClick={() => navigate("/dashboard/departments")}
-                  className="w-full text-left px-4 py-3 bg-gray-50 hover:bg-orange-50 rounded-lg transition-colors group"
-                >
-                  <div className="flex items-center">
-                    <div className="w-8 h-8 bg-gray-200 group-hover:bg-orange-200 rounded-lg flex items-center justify-center mr-3 transition-colors">
-                      <svg
-                        className="w-4 h-4 text-gray-600 group-hover:text-orange-600 transition-colors"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                        />
-                      </svg>
+            {/* Quick Actions - Only show for users with establishments */}
+            {hasEstablishments && (
+              <div className="bg-white rounded-xl shadow-lg border border-orange-100 overflow-hidden">
+                <div className="px-4 sm:px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-blue-100">
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Quick Actions
+                  </h3>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Common tasks and shortcuts
+                  </p>
+                </div>
+                <div className="p-4 sm:p-6 space-y-3">
+                  <button
+                    onClick={navigateToDepartments}
+                    className="w-full text-left px-4 py-3 bg-gray-50 hover:bg-orange-50 rounded-lg transition-colors group"
+                  >
+                    <div className="flex items-center">
+                      <div className="w-8 h-8 bg-gray-200 group-hover:bg-orange-200 rounded-lg flex items-center justify-center mr-3 transition-colors">
+                        <svg
+                          className="w-4 h-4 text-gray-600 group-hover:text-orange-600 transition-colors"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                          />
+                        </svg>
+                      </div>
+                      <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900 transition-colors">
+                        Manage Departments
+                      </span>
                     </div>
-                    <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900 transition-colors">
-                      Manage Departments
-                    </span>
-                  </div>
-                </button>
+                  </button>
 
-                <button
-                  onClick={() => navigate("/dashboard/gates")}
-                  className="w-full text-left px-4 py-3 bg-gray-50 hover:bg-orange-50 rounded-lg transition-colors group"
-                >
-                  <div className="flex items-center">
-                    <div className="w-8 h-8 bg-gray-200 group-hover:bg-orange-200 rounded-lg flex items-center justify-center mr-3 transition-colors">
-                      <svg
-                        className="w-4 h-4 text-gray-600 group-hover:text-orange-600 transition-colors"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                        />
-                      </svg>
+                  <button
+                    onClick={() => navigate("/dashboard/gates")}
+                    className="w-full text-left px-4 py-3 bg-gray-50 hover:bg-orange-50 rounded-lg transition-colors group"
+                  >
+                    <div className="flex items-center">
+                      <div className="w-8 h-8 bg-gray-200 group-hover:bg-orange-200 rounded-lg flex items-center justify-center mr-3 transition-colors">
+                        <svg
+                          className="w-4 h-4 text-gray-600 group-hover:text-orange-600 transition-colors"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                          />
+                        </svg>
+                      </div>
+                      <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900 transition-colors">
+                        Manage Gates
+                      </span>
                     </div>
-                    <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900 transition-colors">
-                      Manage Gates
-                    </span>
-                  </div>
-                </button>
+                  </button>
 
-                <button
-                  onClick={() => navigate("/dashboard/mappings")}
-                  className="w-full text-left px-4 py-3 bg-gray-50 hover:bg-orange-50 rounded-lg transition-colors group"
-                >
-                  <div className="flex items-center">
-                    <div className="w-8 h-8 bg-gray-200 group-hover:bg-orange-200 rounded-lg flex items-center justify-center mr-3 transition-colors">
-                      <svg
-                        className="w-4 h-4 text-gray-600 group-hover:text-orange-600 transition-colors"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                        />
-                      </svg>
+                  <button
+                    onClick={() => navigate("/dashboard/mappings")}
+                    className="w-full text-left px-4 py-3 bg-gray-50 hover:bg-orange-50 rounded-lg transition-colors group"
+                  >
+                    <div className="flex items-center">
+                      <div className="w-8 h-8 bg-gray-200 group-hover:bg-orange-200 rounded-lg flex items-center justify-center mr-3 transition-colors">
+                        <svg
+                          className="w-4 h-4 text-gray-600 group-hover:text-orange-600 transition-colors"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                          />
+                        </svg>
+                      </div>
+                      <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900 transition-colors">
+                        User Mappings
+                      </span>
                     </div>
-                    <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900 transition-colors">
-                      User Mappings
-                    </span>
-                  </div>
-                </button>
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </main>

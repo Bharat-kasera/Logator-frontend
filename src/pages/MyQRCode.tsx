@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { generateQRValue } from '../utils/qrUtils';
 
 const MyQRCode: React.FC = () => {
   const { user } = useAuth();
@@ -14,8 +15,8 @@ const MyQRCode: React.FC = () => {
     email: false,
   });
 
-  const userId = user?.id || 'unknown';
-  const qrValue = `https://yourapp.com/user/${userId}`;
+  const userId = user?.id;
+  const qrValue = userId ? generateQRValue(userId) : 'INVALID-USER';
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setOptions({ ...options, [event.target.name]: event.target.checked });
@@ -117,7 +118,14 @@ const MyQRCode: React.FC = () => {
                   />
                 </div>
                 <div className="text-center mt-4">
-                  <p className="text-sm text-gray-600">User ID: {userId}</p>
+                  <p className="text-sm text-gray-600">Secure QR Code</p>
+                  <p className="text-xs text-gray-500 mt-1">Personal identification code</p>
+                  <div className="flex items-center justify-center mt-2">
+                    <svg className="w-3 h-3 text-green-500 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                    <span className="text-xs text-green-600 font-medium">Encrypted</span>
+                  </div>
                 </div>
               </div>
 

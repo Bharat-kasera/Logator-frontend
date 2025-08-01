@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { api } from "../utils/api";
 
 interface UserForm {
   firstname: string;
@@ -36,11 +37,7 @@ const RegisterUser: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
+      const res = await api.post("/register", form);
 
       if (res.ok) {
         setStep("otp");
@@ -60,11 +57,7 @@ const RegisterUser: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/verify-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, otp }),
-      });
+      const res = await api.post("/verify-otp", { ...form, otp });
 
       if (res.ok) {
         setStep("done");

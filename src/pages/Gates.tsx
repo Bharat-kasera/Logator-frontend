@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useEstablishment } from '../contexts/EstablishmentContext';
 import type { Establishment } from '../contexts/EstablishmentContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useData } from '../contexts/DataContext';
 import { useNavigate } from 'react-router-dom';
 import InviteUserModal from '../components/InviteUserModal';
 import { api } from '../utils/api';
@@ -32,9 +33,10 @@ const Gates: React.FC = () => {
   const [availableEstablishments, setAvailableEstablishments] = useState<Establishment[]>([]);
   const [loadingEstablishments, setLoadingEstablishments] = useState(false);
 
-  // Plan logic - ensure we have a valid plan number
+  // Plan logic - use centralized plan configuration
+  const { userPlan } = useData();
   const plan = Number(selectedEstablishment?.plan) || 1; // Convert to number and default to Basic if undefined
-  const maxGates = plan === 1 ? 1 : Infinity; // Basic: 1 gate, Pro & Enterprise: unlimited
+  const maxGates = userPlan?.maxGates || 1; // Use centralized plan config
   const isBasic = plan === 1;
   const isPro = plan === 2;
 
@@ -46,22 +48,14 @@ const Gates: React.FC = () => {
     fetchGates();
   }, [selectedEstablishment, wsToken]);
 
+  // Get establishments from centralized data context
+  const { establishments: dataEstablishments } = useData();
+  
   const fetchAvailableEstablishments = async () => {
     setLoadingEstablishments(true);
-    try {
-      const response = await api.get('/establishments/my-establishments', {
-        headers: { 'Authorization': `Bearer ${wsToken}` }
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setAvailableEstablishments(data);
-      }
-    } catch (err) {
-      console.error('Failed to fetch establishments:', err);
-    } finally {
-      setLoadingEstablishments(false);
-    }
+    // Use cached data instead of fetching
+    setAvailableEstablishments(dataEstablishments);
+    setLoadingEstablishments(false);
   };
 
   const handleEstablishmentSelect = (establishment: Establishment) => {
@@ -276,8 +270,8 @@ const Gates: React.FC = () => {
     const plan = selectedEstablishment?.plan;
     const planNum = Number(plan); // Convert to number to handle string/number mismatch
     if (planNum === 1) return 'Basic plan allows up to 1 gate';
-    if (planNum === 2) return 'Pro plan allows unlimited gates';
-    if (planNum === 3) return 'Enterprise plan allows unlimited gates';
+    if (planNum === 2) return 'Pro plan allows up to 10 gates';
+    if (planNum === 3) return 'Enterprise plan allows up to 10 gates per establishment';
     return 'Unknown plan limits';
   };
 
@@ -443,7 +437,7 @@ const Gates: React.FC = () => {
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-600">Gates used:</span>
               <span className="font-medium text-gray-900">
-                {gates.length} / {maxGates === Infinity ? '∞' : maxGates}
+                {gates.length} / {maxGates}
               </span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
@@ -452,7 +446,7 @@ const Gates: React.FC = () => {
                   gates.length >= maxGates ? 'bg-red-500' : 'bg-orange-500'
                 }`}
                 style={{ 
-                  width: maxGates === Infinity ? '20%' : `${(gates.length / maxGates) * 100}%` 
+                  width: `${(gates.length / maxGates) * 100}%`
                 }}
               ></div>
             </div>

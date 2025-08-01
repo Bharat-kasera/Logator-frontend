@@ -9,6 +9,7 @@ import {
 } from '@mui/material';
 import { useAuth } from '../contexts/AuthContext';
 import PhotoUpload from '../components/PhotoUpload';
+import { api } from '../utils/api';
 
 const Profile: React.FC = () => {
   const { user, setUser } = useAuth() as any;
@@ -69,13 +70,10 @@ const Profile: React.FC = () => {
       };
 
       const wsToken = localStorage.getItem('wsToken');
-      const res = await fetch('/api/update-profile', {
-        method: 'POST',
+      const res = await api.post('/update-profile', payload, {
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${wsToken}`
-        },
-        body: JSON.stringify(payload)
+        }
       });
 
       const data = await res.json().catch(() => ({}));

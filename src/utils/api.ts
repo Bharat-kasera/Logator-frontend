@@ -19,12 +19,22 @@ export const apiRequest = async (
 
   console.log(`🌐 Making API request to: ${url}`);
 
+  // Get token from localStorage
+  const token = localStorage.getItem("wsToken");
+  
+  // Build headers with Authorization if token exists
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    ...options.headers,
+  };
+
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
   const response = await fetch(url, {
     ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
+    headers,
   });
 
   // Handle 401 Unauthorized (token expired)

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { api } from '../utils/api';
 
 const Subscriptions: React.FC = () => {
   const { user, wsToken } = useAuth();
@@ -31,9 +32,9 @@ const Subscriptions: React.FC = () => {
       price: '$29/month',
       description: 'For growing businesses',
       features: [
-        '5 Establishments',
-        'Unlimited Departments',
-        'Unlimited Gates',
+        '1 Establishment',
+        '10 Departments',
+        '10 Gates',
         '1,000 Visitors per month',
         'Advanced Analytics',
         'Custom Branding',
@@ -49,9 +50,9 @@ const Subscriptions: React.FC = () => {
       price: '$99/month',
       description: 'For large organizations',
       features: [
-        'Unlimited Establishments',
-        'Unlimited Departments',
-        'Unlimited Gates',
+        '10 Establishments',
+        '10 Departments per establishment',
+        '10 Gates per establishment',
         'Unlimited Visitors',
         'Enterprise Analytics',
         'Custom Integrations',
@@ -79,13 +80,10 @@ const Subscriptions: React.FC = () => {
       }
 
       // For downgrading to basic, we can allow it for testing
-      const response = await fetch('/api/update-plan', {
-        method: 'POST',
+      const response = await api.post('/update-plan', { plan: planId }, {
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${wsToken}`,
         },
-        body: JSON.stringify({ plan: planId }),
       });
 
       if (response.ok) {

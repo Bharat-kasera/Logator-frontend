@@ -4,14 +4,25 @@ import io from "socket.io-client";
 import { SOCKET_URL } from "../config";
 import { api } from "../utils/api";
 
+interface User {
+  id: number;
+  firstname?: string;
+  lastname?: string;
+  plan?: number;
+  phone?: string;
+  country_code?: string;
+}
+
 interface AuthContextType {
   isAuthenticated: boolean;
-  user: any | null;
+  user: User | null;
   wsToken: string | null;
   login: (phone: string, otp: string, country_code?: string) => Promise<void>;
   logout: () => void;
   socket: Socket | null;
-  setUser: (user: any | null) => void; // 💪 added setUser
+  setUser: (user: User | null) => void;
+  isInitialDataLoaded: boolean;
+  setIsInitialDataLoaded: (loaded: boolean) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -22,7 +33,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [isAuthenticated, setIsAuthenticated] = useState(
     () => !!localStorage.getItem("wsToken")
   );
-  const [user, setUser] = useState<any | null>(() => {
+  const [user, setUser] = useState<User | null>(() => {
     const u = localStorage.getItem("user");
     return u ? JSON.parse(u) : null;
   });
@@ -30,6 +41,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     localStorage.getItem("wsToken")
   );
   const [socket, setSocket] = useState<Socket | null>(null);
+  const [isInitialDataLoaded, setIsInitialDataLoaded] = useState(false);
 
   useEffect(() => {
     const newSocket = io(SOCKET_URL);
@@ -97,6 +109,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     setIsAuthenticated(false);
     setUser(null);
     setWsToken(null);
+    setIsInitialDataLoaded(false);
     localStorage.removeItem("wsToken");
     localStorage.removeItem("user");
     if (socket) {
@@ -107,7 +120,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   return (
     <AuthContext.Provider
-      value={{ isAuthenticated, user, wsToken, login, logout, socket, setUser }}
+      value={{ 
+        isAuthenticated, 
+        user, 
+        wsToken, 
+        login, 
+        logout, 
+        socket, 
+        setUser, 
+        isInitialDataLoaded, 
+        setIsInitialDataLoaded 
+      }}
     >
       {children}
     </AuthContext.Provider>

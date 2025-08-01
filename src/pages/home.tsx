@@ -1,11 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../utils/api';
 
+interface PendingRequest {
+  type: string;
+  establishment_name: string;
+}
+
+interface Establishment {
+  id: number;
+  name: string;
+}
+
 interface DashboardData {
-  pendingRequests: any[];
-  establishments: any[];
+  pendingRequests: PendingRequest[];
+  establishments: Establishment[];
   stats: {
     total_visitors: number;
     today_visitors: number;
@@ -19,11 +29,7 @@ const Home: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, []);
-
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
     try {
       const response = await api.get('/dashboard', {
         headers: {
@@ -40,21 +46,24 @@ const Home: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [wsToken]);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, [fetchDashboardData]);
+
+
 
   const sideMenuItems = [
     { name: 'Dashboard', icon: 'home', path: '/dashboard', active: true },
-    { name: 'Establishments', icon: 'building', path: '/create-establishment' },
-    { name: 'Departments', icon: 'users', path: '/dashboard/departments' },
-    { name: 'Gates', icon: 'lock', path: '/dashboard/gates' },
-    { name: 'Mappings', icon: 'map', path: '/dashboard/mappings' },
-    { name: 'Analytics', icon: 'chart', path: '/dashboard/analytics' },
+    { name: 'Companies', icon: 'building', path: '/dashboard/companies' },
     { name: 'Subscriptions', icon: 'credit-card', path: '/subscriptions' },
     { name: 'Profile', icon: 'user', path: '/dashboard/profile' },
+    { name: 'Settings', icon: 'cog', path: '/dashboard/settings' },
   ];
 
   const getIcon = (iconName: string) => {
-    const icons: { [key: string]: JSX.Element } = {
+    const icons: { [key: string]: React.ReactElement } = {
       home: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />,
       building: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />,
       users: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />,
@@ -155,7 +164,7 @@ const Home: React.FC = () => {
                   </svg>
                 </button>
                 <h1 className="ml-4 lg:ml-0 text-2xl font-bold text-gray-900">
-                  Welcome back, <span className="text-orange-500">{user?.firstname || 'User'}</span>
+                  Welcome, <span className="text-orange-500">{user?.firstname || 'User'}</span>
                 </h1>
               </div>
               

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { api } from '../utils/api';
 
 const Settings: React.FC = () => {
   const { user, wsToken, updateUser } = useAuth();
@@ -72,13 +73,10 @@ const Settings: React.FC = () => {
     setSuccess('');
 
     try {
-      const response = await fetch('/api/user/profile', {
-        method: 'PUT',
+      const response = await api.put('/user/profile', formData, {
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${wsToken}`,
         },
-        body: JSON.stringify(formData),
       });
 
       if (response.ok) {
@@ -104,8 +102,7 @@ const Settings: React.FC = () => {
 
     setLoading(true);
     try {
-      const response = await fetch('/api/user/delete', {
-        method: 'DELETE',
+      const response = await api.delete('/user/delete', {
         headers: {
           'Authorization': `Bearer ${wsToken}`,
         },

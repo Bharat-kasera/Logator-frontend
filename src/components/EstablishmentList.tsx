@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useEstablishment } from "../contexts/EstablishmentContext";
-import { api } from "../utils/api";
+import { useData } from "../contexts/DataContext";
+import LoadingSpinner from "./LoadingSpinner";
 
 export interface Establishment {
   id: number;
@@ -23,44 +24,21 @@ const EstablishmentList: React.FC<EstablishmentListProps> = ({
   showCreateButton = true,
 }) => {
   const navigate = useNavigate();
-  const { user, wsToken } = useAuth();
+  const { user } = useAuth();
   const { setSelectedEstablishment } = useEstablishment();
-  const [establishments, setEstablishments] = useState<Establishment[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const { 
+    establishments, 
+    isLoadingEstablishments, 
+    establishmentsError,
+    userPlan,
+    canCreateEstablishment 
+  } = useData();
 
-  // Plan limits - default to Basic (plan 1) if no plan is set
-  const userPlan = user?.plan || 1;
-  const maxEstablishments = userPlan === 3 ? 10 : 1; // Enterprise: 10, others: 1
-  const canCreate = establishments.length < maxEstablishments;
+  const loading = isLoadingEstablishments;
+  const error = establishmentsError || "";
+  const canCreate = canCreateEstablishment;
 
-  const fetchEstablishments = useCallback(async () => {
-    setLoading(true);
-    setError("");
-    try {
-      const response = await api.get("/establishments/my-establishments", {
-        headers: {
-          Authorization: `Bearer ${wsToken}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch establishments");
-      }
-
-      const data = await response.json();
-      setEstablishments(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch establishments");
-    } finally {
-      setLoading(false);
-    }
-  }, [wsToken]);
-
-  useEffect(() => {
-    if (!wsToken || !user?.id) return;
-    fetchEstablishments();
-  }, [wsToken, user?.id, fetchEstablishments]);
+  // Data is now loaded automatically by DataContext, no need for individual fetching
 
   const handleEstablishmentClick = (establishment: Establishment) => {
     setSelectedEstablishment(establishment);
@@ -125,7 +103,12 @@ const EstablishmentList: React.FC<EstablishmentListProps> = ({
             d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
           ></path>
         </svg>
-        <p className="text-gray-500">Loading establishments...</p>
+        <LoadingSpinner 
+          size="md" 
+          color="orange" 
+          message="Loading establishments..." 
+          fullScreen={false}
+        />
       </div>
     );
   }

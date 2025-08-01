@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useEstablishment } from "../contexts/EstablishmentContext";
 import type { Establishment } from "../contexts/EstablishmentContext";
 import { useAuth } from "../contexts/AuthContext";
+import { useData } from "../contexts/DataContext";
 import { useNavigate } from "react-router-dom";
 import InviteDepartmentUserModal from "../components/InviteDepartmentUserModal";
 import { api } from "../utils/api";
@@ -26,48 +27,30 @@ const Departments: React.FC = () => {
   const [availableEstablishments, setAvailableEstablishments] = useState<Establishment[]>([]);
   const [loadingEstablishments, setLoadingEstablishments] = useState(false);
 
-  // Plan logic - ensure we have a valid plan number
+  // Plan logic - use centralized plan configuration
+  const { userPlan } = useData();
   const plan = Number(selectedEstablishment?.plan) || 1; // Convert to number and default to Basic if undefined
-  const maxDepartments = plan === 1 ? 1 : Infinity; // Basic: 1 department, Pro & Enterprise: unlimited
-  const isBasic = plan === 1;
+  const maxDepartments = userPlan?.maxDepartments || 1; // Use centralized plan config
+    const isBasic = plan === 1;
   const isPro = plan === 2;
-  const isEnterprise = plan === 3;
 
-  useEffect(() => {
-    if (!selectedEstablishment) {
-      fetchAvailableEstablishments();
-      return;
-    }
-    fetchDepartments();
-  }, [selectedEstablishment, wsToken]);
-
-  const fetchAvailableEstablishments = async () => {
+  // Get establishments from centralized data context
+  const { establishments: dataEstablishments } = useData();
+  
+  const fetchAvailableEstablishments = useCallback(async () => {
     setLoadingEstablishments(true);
-    try {
-      const response = await api.get('/establishments/my-establishments', {
-        headers: { 'Authorization': `Bearer ${wsToken}` }
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setAvailableEstablishments(data);
-        // Auto-select the first establishment if none is selected
-        if (data.length > 0 && !selectedEstablishment) {
-          setSelectedEstablishment(data[0]);
-        }
-      }
-    } catch (err) {
-      console.error('Failed to fetch establishments:', err);
-    } finally {
-      setLoadingEstablishments(false);
+    // Use cached data instead of fetching
+    setAvailableEstablishments(dataEstablishments);
+    // Auto-select the first establishment if none is selected
+    if (dataEstablishments.length > 0 && !selectedEstablishment) {
+      setSelectedEstablishment(dataEstablishments[0]);
     }
-  };
+    setLoadingEstablishments(false);
+  }, [dataEstablishments, selectedEstablishment, setSelectedEstablishment]);
 
-  const handleEstablishmentSelect = (establishment: Establishment) => {
-    setSelectedEstablishment(establishment);
-  };
-
-  const fetchDepartments = async () => {
+  const fetchDepartments = useCallback(async () => {
+    if (!selectedEstablishment) return;
+    
     setLoading(true);
     setError("");
     try {
@@ -84,15 +67,27 @@ const Departments: React.FC = () => {
       } else {
         throw new Error("Failed to fetch departments");
       }
-    } catch (err) {
+    } catch {
       setError("Failed to fetch departments");
     } finally {
       setLoading(false);
     }
+  }, [selectedEstablishment, wsToken]);
+
+  useEffect(() => {
+    if (!selectedEstablishment) {
+      fetchAvailableEstablishments();
+      return;
+    }
+    fetchDepartments();
+  }, [selectedEstablishment, wsToken, fetchAvailableEstablishments, fetchDepartments]);
+
+  const handleEstablishmentSelect = (establishment: Establishment) => {
+    setSelectedEstablishment(establishment);
   };
 
   const handleAdd = async () => {
-    if (!dept.trim() || departments.length >= maxDepartments) return;
+    if (!dept.trim() || departments.length >= maxDepartments || !selectedEstablishment) return;
     setLoading(true);
     setError("");
     setSuccess("");
@@ -167,8 +162,8 @@ const Departments: React.FC = () => {
     const plan = selectedEstablishment?.plan;
     const planNum = Number(plan); // Convert to number to handle string/number mismatch
     if (planNum === 1) return "Basic plan allows only 1 department";
-    if (planNum === 2) return "Pro plan allows unlimited departments";
-    if (planNum === 3) return "Enterprise plan allows unlimited departments";
+    if (planNum === 2) return "Pro plan allows up to 10 departments";
+    if (planNum === 3) return "Enterprise plan allows up to 10 departments per establishment";
     return "Unknown plan limits";
   };
 
@@ -184,17 +179,17 @@ const Departments: React.FC = () => {
                   <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center shadow-lg">
                     <svg
                       className="w-6 h-6 text-white"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
                         d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"
-                      />
-                    </svg>
+            />
+          </svg>
                   </div>
                   <span onClick={() => navigate('/dashboard')} className="ml-3 text-xl font-bold text-gray-900 cursor-pointer">
                     Logator.io
@@ -262,13 +257,13 @@ const Departments: React.FC = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
               </svg>
               <p className="text-gray-500 mb-4">No establishments found</p>
-              <button
-                onClick={() => navigate("/create-establishment")}
-                className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
-              >
-                Create Establishment
-              </button>
-            </div>
+          <button
+            onClick={() => navigate("/create-establishment")}
+            className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+          >
+            Create Establishment
+          </button>
+        </div>
           )}
         </main>
       </div>
@@ -348,8 +343,7 @@ const Departments: React.FC = () => {
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-600">Departments used:</span>
               <span className="font-medium text-gray-900">
-                {departments.length} /{" "}
-                {maxDepartments === Infinity ? "∞" : maxDepartments}
+                {departments.length} / {maxDepartments}
               </span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2 mt-2">

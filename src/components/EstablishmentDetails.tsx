@@ -54,8 +54,8 @@ const EstablishmentDetails: React.FC<EstablishmentDetailsProps> = ({
 
   // Plan limits
   const plan = establishment?.plan || selectedEstablishment?.plan;
-  const maxDepartments = plan === 1 ? 1 : plan === 2 ? 10 : Infinity;
-  const maxGates = plan === 1 ? 2 : plan === 2 ? 10 : Infinity;
+  const maxDepartments = plan === 1 ? 1 : 10; // Basic: 1, Pro & Enterprise: 10
+  const maxGates = plan === 1 ? 1 : 10; // Basic: 1, Pro & Enterprise: 10
 
   useEffect(() => {
     if (currentEstablishmentId) {
@@ -454,8 +454,7 @@ const EstablishmentDetails: React.FC<EstablishmentDetailsProps> = ({
                     </button>
                   </div>
                   <p className="text-sm text-gray-600 mt-2">
-                    Departments: {departments.length} /{" "}
-                    {maxDepartments === Infinity ? "∞" : maxDepartments}
+                    Departments: {departments.length} / {maxDepartments}
                   </p>
                 </div>
 
@@ -544,8 +543,7 @@ const EstablishmentDetails: React.FC<EstablishmentDetailsProps> = ({
                       Manage Gates
                     </h3>
                     <p className="text-sm text-gray-600 mt-1">
-                      Gates: {gates.length} /{" "}
-                      {maxGates === Infinity ? "∞" : maxGates}
+                      Gates: {gates.length} / {maxGates}
                     </p>
                   </div>
                   <button

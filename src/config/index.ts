@@ -8,63 +8,64 @@ const isProduction = import.meta.env.PROD;
 
 // Use environment variables if available, otherwise fallback based on environment
 const getApiUrl = () => {
-  // FORCE LOCAL DEVELOPMENT - comment out for production
-  if (!isProduction) {
-    return "http://localhost:4001/api";
-  }
-  
-  // If explicit environment variable is set, use it
-  if (import.meta.env.VITE_API_URL) {
-    return import.meta.env.VITE_API_URL;
+  // In production, always use environment variables
+  if (isProduction) {
+    if (import.meta.env.VITE_API_URL) {
+      return import.meta.env.VITE_API_URL;
+    }
+    if (import.meta.env.VITE_BACKEND_URL) {
+      return `${import.meta.env.VITE_BACKEND_URL.replace(/\/$/, "")}/api`;
+    }
+    console.error("❌ VITE_BACKEND_URL is required in production but not set!");
+    throw new Error("VITE_BACKEND_URL environment variable is required in production");
   }
 
-  // In production, we MUST have a backend URL - don't fallback to relative paths
-  if (isProduction) {
-    const backendUrl = import.meta.env.VITE_BACKEND_URL;
-    if (!backendUrl) {
-      console.error(
-        "❌ VITE_BACKEND_URL is required in production but not set!"
-      );
-      // Replace this with your actual backend Vercel URL
-      // Check your Vercel dashboard for the correct backend URL
-      throw new Error(
-        "VITE_BACKEND_URL environment variable is required in production"
-      );
+  // In development, prefer localhost unless VITE_USE_DEPLOYED_BACKEND is explicitly set
+  if (!isProduction) {
+    // Check if user explicitly wants to use deployed backend in development
+    if (import.meta.env.VITE_USE_DEPLOYED_BACKEND === 'true') {
+      if (import.meta.env.VITE_API_URL) {
+        return import.meta.env.VITE_API_URL;
+      }
+      if (import.meta.env.VITE_BACKEND_URL) {
+        return `${import.meta.env.VITE_BACKEND_URL.replace(/\/$/, "")}/api`;
+      }
     }
-    return `${backendUrl.replace(/\/$/, "")}/api`;
+    // Default to localhost in development
+    return "http://localhost:4001/api";
   }
-  // In development, use local backend (FORCE LOCAL FOR DEVELOPMENT)
+
   return "http://localhost:4001/api";
 };
 
 const getSocketUrl = () => {
-  // FORCE LOCAL DEVELOPMENT - comment out for production
+  // In production, always use environment variables
+  if (isProduction) {
+    if (import.meta.env.VITE_SOCKET_URL) {
+      return import.meta.env.VITE_SOCKET_URL;
+    }
+    if (import.meta.env.VITE_BACKEND_URL) {
+      return import.meta.env.VITE_BACKEND_URL.replace(/\/$/, "");
+    }
+    console.error("❌ VITE_BACKEND_URL is required in production but not set!");
+    throw new Error("VITE_BACKEND_URL environment variable is required in production");
+  }
+
+  // In development, prefer localhost unless VITE_USE_DEPLOYED_BACKEND is explicitly set
   if (!isProduction) {
+    // Check if user explicitly wants to use deployed backend in development
+    if (import.meta.env.VITE_USE_DEPLOYED_BACKEND === 'true') {
+      if (import.meta.env.VITE_SOCKET_URL) {
+        return import.meta.env.VITE_SOCKET_URL;
+      }
+      if (import.meta.env.VITE_BACKEND_URL) {
+        return import.meta.env.VITE_BACKEND_URL.replace(/\/$/, "");
+      }
+    }
+    // Default to localhost in development
     return "http://localhost:4001";
   }
 
-  // If explicit environment variable is set, use it
-  if (import.meta.env.VITE_SOCKET_URL) {
-    return import.meta.env.VITE_SOCKET_URL;
-  }
-
-  // In production, we MUST have a backend URL - don't fallback to frontend origin
-  if (isProduction) {
-    const backendUrl = import.meta.env.VITE_BACKEND_URL;
-    if (!backendUrl) {
-      console.error(
-        "❌ VITE_BACKEND_URL is required in production but not set!"
-      );
-      // Replace this with your actual backend Vercel URL
-      // Check your Vercel dashboard for the correct backend URL
-      throw new Error(
-        "VITE_BACKEND_URL environment variable is required in production"
-      );
-    }
-    return backendUrl.replace(/\/$/, "");
-  }
-
-  // In development, use local backend
   return "http://localhost:4001";
 };
 
