@@ -9,6 +9,7 @@ import {
   Stack,
   Alert
 } from "@mui/material";
+import { api } from "../utils/api";
 
 interface CreateEstablishmentProps {
   onCreated: () => void;
@@ -63,13 +64,10 @@ const CreateEstablishment: React.FC<CreateEstablishmentProps> = ({ onCreated, us
       plan: estPlan,
     };
     try {
-      const res = await fetch("/api/establishments/create-establishment", {
-        method: "POST",
+      const res = await api.post("/establishments/create-establishment", payload, {
         headers: {
-          "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`,
         },
-        body: JSON.stringify(payload),
       });
 
       // Handle 401 Unauthorized (token expired)

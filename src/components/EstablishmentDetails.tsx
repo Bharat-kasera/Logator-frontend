@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useEstablishment } from "../contexts/EstablishmentContext";
 import GateForm from "./GateForm";
+import { api } from "../utils/api";
 
 interface Department {
   id: number;
@@ -139,16 +140,13 @@ const EstablishmentDetails: React.FC<EstablishmentDetailsProps> = ({
 
     setDepartmentLoading(true);
     try {
-      const response = await fetch("/api/departments", {
-        method: "POST",
+      const response = await api.post("/departments", {
+        establishment_id: currentEstablishmentId,
+        name: newDepartmentName.trim(),
+      }, {
         headers: {
-          "Content-Type": "application/json",
           Authorization: `Bearer ${wsToken}`,
         },
-        body: JSON.stringify({
-          establishment_id: currentEstablishmentId,
-          name: newDepartmentName.trim(),
-        }),
       });
 
       if (!response.ok) {

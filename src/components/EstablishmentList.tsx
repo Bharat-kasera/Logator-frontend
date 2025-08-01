@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useEstablishment } from "../contexts/EstablishmentContext";
+import { api } from "../utils/api";
 
 export interface Establishment {
   id: number;
@@ -37,7 +38,7 @@ const EstablishmentList: React.FC<EstablishmentListProps> = ({
     setLoading(true);
     setError("");
     try {
-      const response = await fetch("/api/establishments/my-establishments", {
+      const response = await api.get("/establishments/my-establishments", {
         headers: {
           Authorization: `Bearer ${wsToken}`,
         },
