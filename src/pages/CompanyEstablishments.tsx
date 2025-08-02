@@ -47,9 +47,9 @@ const CompanyEstablishments: React.FC = () => {
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  // Plan limits
+  // Plan limits - Basic: 1, Pro: 1, Enterprise: 10
   const userPlan = user?.plan || 1;
-  const establishmentLimit = userPlan === 1 ? 1 : 10; // Basic: 1, Pro/Enterprise: 10
+  const establishmentLimit = userPlan === 3 ? 10 : 1; // Basic & Pro: 1, Enterprise: 10
   const canCreate = establishments.length < establishmentLimit;
 
   useEffect(() => {

@@ -155,123 +155,123 @@ const Dashboard: React.FC = () => {
 
         {/* Stats Cards - Only show if user has establishments */}
         {hasEstablishments && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
-            {/* Total Visitors */}
-            <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-orange-100 hover:shadow-xl transition-shadow">
-              <div className="flex items-center justify-between">
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-gray-600 truncate">
-                    Total Visitors
-                  </p>
-                  <p className="text-2xl sm:text-3xl font-bold text-gray-900">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
+          {/* Total Visitors */}
+          <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-orange-100 hover:shadow-xl transition-shadow">
+            <div className="flex items-center justify-between">
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-gray-600 truncate">
+                  Total Visitors
+                </p>
+                <p className="text-2xl sm:text-3xl font-bold text-gray-900">
                     {dashboardStats?.total_visitors || 0}
-                  </p>
-                </div>
-                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <svg
-                    className="w-5 h-5 sm:w-6 sm:h-6 text-orange-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                    />
-                  </svg>
-                </div>
+                </p>
               </div>
-            </div>
-
-            {/* Today's Visitors */}
-            <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-orange-100 hover:shadow-xl transition-shadow">
-              <div className="flex items-center justify-between">
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-gray-600 truncate">
-                    Today's Visitors
-                  </p>
-                  <p className="text-2xl sm:text-3xl font-bold text-green-600">
-                    {dashboardStats?.today_visitors || 0}
-                  </p>
-                </div>
-                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <svg
-                    className="w-5 h-5 sm:w-6 sm:h-6 text-green-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                </div>
-              </div>
-            </div>
-
-            {/* Establishments */}
-            <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-orange-100 hover:shadow-xl transition-shadow">
-              <div className="flex items-center justify-between">
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-gray-600 truncate">
-                    Establishments
-                  </p>
-                  <p className="text-2xl sm:text-3xl font-bold text-blue-600">
-                    {establishments.length}
-                  </p>
-                </div>
-                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <svg
-                    className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                    />
-                  </svg>
-                </div>
-              </div>
-            </div>
-
-            {/* Pending Requests */}
-            <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-orange-100 hover:shadow-xl transition-shadow">
-              <div className="flex items-center justify-between">
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-gray-600 truncate">
-                    Pending Requests
-                  </p>
-                  <p className="text-2xl sm:text-3xl font-bold text-yellow-600">
-                    {pendingRequests.length}
-                  </p>
-                </div>
-                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-yellow-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <svg
-                    className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                </div>
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <svg
+                  className="w-5 h-5 sm:w-6 sm:h-6 text-orange-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                  />
+                </svg>
               </div>
             </div>
           </div>
+
+          {/* Today's Visitors */}
+          <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-orange-100 hover:shadow-xl transition-shadow">
+            <div className="flex items-center justify-between">
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-gray-600 truncate">
+                  Today's Visitors
+                </p>
+                <p className="text-2xl sm:text-3xl font-bold text-green-600">
+                    {dashboardStats?.today_visitors || 0}
+                </p>
+              </div>
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <svg
+                  className="w-5 h-5 sm:w-6 sm:h-6 text-green-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          {/* Establishments */}
+          <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-orange-100 hover:shadow-xl transition-shadow">
+            <div className="flex items-center justify-between">
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-gray-600 truncate">
+                  Establishments
+                </p>
+                <p className="text-2xl sm:text-3xl font-bold text-blue-600">
+                    {establishments.length}
+                </p>
+              </div>
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <svg
+                  className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                  />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          {/* Pending Requests */}
+          <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-orange-100 hover:shadow-xl transition-shadow">
+            <div className="flex items-center justify-between">
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-gray-600 truncate">
+                  Pending Requests
+                </p>
+                <p className="text-2xl sm:text-3xl font-bold text-yellow-600">
+                    {pendingRequests.length}
+                </p>
+              </div>
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-yellow-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <svg
+                  className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
         )}
 
         {/* Welcome section for users without establishments */}
@@ -485,95 +485,95 @@ const Dashboard: React.FC = () => {
 
             {/* Quick Actions - Only show for users with establishments */}
             {hasEstablishments && (
-              <div className="bg-white rounded-xl shadow-lg border border-orange-100 overflow-hidden">
-                <div className="px-4 sm:px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-blue-100">
-                  <h3 className="text-lg font-semibold text-gray-900">
-                    Quick Actions
-                  </h3>
-                  <p className="text-sm text-gray-600 mt-1">
-                    Common tasks and shortcuts
-                  </p>
-                </div>
-                <div className="p-4 sm:p-6 space-y-3">
-                  <button
-                    onClick={navigateToDepartments}
-                    className="w-full text-left px-4 py-3 bg-gray-50 hover:bg-orange-50 rounded-lg transition-colors group"
-                  >
-                    <div className="flex items-center">
-                      <div className="w-8 h-8 bg-gray-200 group-hover:bg-orange-200 rounded-lg flex items-center justify-center mr-3 transition-colors">
-                        <svg
-                          className="w-4 h-4 text-gray-600 group-hover:text-orange-600 transition-colors"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                          />
-                        </svg>
-                      </div>
-                      <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900 transition-colors">
-                        Manage Departments
-                      </span>
-                    </div>
-                  </button>
-
-                  <button
-                    onClick={() => navigate("/dashboard/gates")}
-                    className="w-full text-left px-4 py-3 bg-gray-50 hover:bg-orange-50 rounded-lg transition-colors group"
-                  >
-                    <div className="flex items-center">
-                      <div className="w-8 h-8 bg-gray-200 group-hover:bg-orange-200 rounded-lg flex items-center justify-center mr-3 transition-colors">
-                        <svg
-                          className="w-4 h-4 text-gray-600 group-hover:text-orange-600 transition-colors"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                          />
-                        </svg>
-                      </div>
-                      <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900 transition-colors">
-                        Manage Gates
-                      </span>
-                    </div>
-                  </button>
-
-                  <button
-                    onClick={() => navigate("/dashboard/mappings")}
-                    className="w-full text-left px-4 py-3 bg-gray-50 hover:bg-orange-50 rounded-lg transition-colors group"
-                  >
-                    <div className="flex items-center">
-                      <div className="w-8 h-8 bg-gray-200 group-hover:bg-orange-200 rounded-lg flex items-center justify-center mr-3 transition-colors">
-                        <svg
-                          className="w-4 h-4 text-gray-600 group-hover:text-orange-600 transition-colors"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                          />
-                        </svg>
-                      </div>
-                      <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900 transition-colors">
-                        User Mappings
-                      </span>
-                    </div>
-                  </button>
-                </div>
+            <div className="bg-white rounded-xl shadow-lg border border-orange-100 overflow-hidden">
+              <div className="px-4 sm:px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-blue-100">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Quick Actions
+                </h3>
+                <p className="text-sm text-gray-600 mt-1">
+                  Common tasks and shortcuts
+                </p>
               </div>
+              <div className="p-4 sm:p-6 space-y-3">
+                <button
+                    onClick={navigateToDepartments}
+                  className="w-full text-left px-4 py-3 bg-gray-50 hover:bg-orange-50 rounded-lg transition-colors group"
+                >
+                  <div className="flex items-center">
+                    <div className="w-8 h-8 bg-gray-200 group-hover:bg-orange-200 rounded-lg flex items-center justify-center mr-3 transition-colors">
+                      <svg
+                        className="w-4 h-4 text-gray-600 group-hover:text-orange-600 transition-colors"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                        />
+                      </svg>
+                    </div>
+                    <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900 transition-colors">
+                      Manage Departments
+                    </span>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => navigate("/dashboard/gates")}
+                  className="w-full text-left px-4 py-3 bg-gray-50 hover:bg-orange-50 rounded-lg transition-colors group"
+                >
+                  <div className="flex items-center">
+                    <div className="w-8 h-8 bg-gray-200 group-hover:bg-orange-200 rounded-lg flex items-center justify-center mr-3 transition-colors">
+                      <svg
+                        className="w-4 h-4 text-gray-600 group-hover:text-orange-600 transition-colors"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                        />
+                      </svg>
+                    </div>
+                    <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900 transition-colors">
+                      Manage Gates
+                    </span>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => navigate("/dashboard/mappings")}
+                  className="w-full text-left px-4 py-3 bg-gray-50 hover:bg-orange-50 rounded-lg transition-colors group"
+                >
+                  <div className="flex items-center">
+                    <div className="w-8 h-8 bg-gray-200 group-hover:bg-orange-200 rounded-lg flex items-center justify-center mr-3 transition-colors">
+                      <svg
+                        className="w-4 h-4 text-gray-600 group-hover:text-orange-600 transition-colors"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                        />
+                      </svg>
+                    </div>
+                    <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900 transition-colors">
+                      User Mappings
+                    </span>
+                  </div>
+                </button>
+              </div>
+            </div>
             )}
           </div>
         </div>

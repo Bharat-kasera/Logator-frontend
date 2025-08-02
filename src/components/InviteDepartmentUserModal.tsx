@@ -58,9 +58,7 @@ const InviteDepartmentUserModal: React.FC<InviteDepartmentUserModalProps> = ({
 
   const fetchDepartments = async () => {
     try {
-      const response = await fetch(`/api/departments/${selectedEstablishment?.id}`, {
-        headers: { 'Authorization': `Bearer ${wsToken}` }
-      });
+      const response = await api.get(`/departments/${selectedEstablishment?.id}`);
       
       if (response.ok) {
         const data = await response.json();
@@ -88,10 +86,6 @@ const InviteDepartmentUserModal: React.FC<InviteDepartmentUserModalProps> = ({
       const response = await api.post('/requests/invite-department', {
         userPhone: phoneNumber,
         departmentId: selectedDepartmentId,
-      }, {
-        headers: {
-          'Authorization': `Bearer ${wsToken}`,
-        },
       });
 
       if (response.ok) {

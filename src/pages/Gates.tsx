@@ -71,9 +71,7 @@ const Gates: React.FC = () => {
     setError('');
     
     try {
-      const response = await api.get(`/gates/${selectedEstablishment.id}`, {
-        headers: { 'Authorization': `Bearer ${wsToken}` }
-      });
+      const response = await api.get(`/gates/${selectedEstablishment.id}`);
       
       if (response.ok) {
         const data = await response.json();
@@ -148,11 +146,7 @@ const Gates: React.FC = () => {
         radius: geofencingEnabled ? parseInt(coordinates.radius) : null
       };
 
-      const response = await api.post('/gates', requestBody, {
-        headers: {
-          'Authorization': `Bearer ${wsToken}`
-        }
-      });
+      const response = await api.post('/gates', requestBody);
       
       if (!response.ok) {
         const errorData = await response.json();
@@ -194,11 +188,7 @@ const Gates: React.FC = () => {
         radius: geofencingEnabled ? parseInt(coordinates.radius) : null
       };
 
-      const response = await api.put(`/gates/${editingGate.id}`, requestBody, {
-        headers: {
-          'Authorization': `Bearer ${wsToken}`
-        }
-      });
+      const response = await api.put(`/gates/${editingGate.id}`, requestBody);
       
       if (!response.ok) {
         throw new Error('Failed to update gate');
@@ -237,9 +227,7 @@ const Gates: React.FC = () => {
     setSuccess('');
     
     try {
-      const response = await api.delete(`/gates/${id}`, {
-        headers: { 'Authorization': `Bearer ${wsToken}` }
-      });
+      const response = await api.delete(`/gates/${id}`);
       
       if (!response.ok) {
         throw new Error('Failed to delete gate');

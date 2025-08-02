@@ -58,11 +58,7 @@ const InviteUserModal: React.FC<InviteUserModalProps> = ({
 
   const fetchGates = async () => {
     try {
-      const response = await fetch(`/api/gates/${selectedEstablishment?.id}`, {
-        headers: {
-          'Authorization': `Bearer ${wsToken}`,
-        },
-      });
+      const response = await api.get(`/gates/${selectedEstablishment?.id}`);
 
       if (response.ok) {
         const data = await response.json();
@@ -107,10 +103,6 @@ const InviteUserModal: React.FC<InviteUserModalProps> = ({
       const response = await api.post('/requests/invite', {
         userPhone: phoneNumber.trim(),
         gateId: selectedGateId,
-      }, {
-        headers: {
-          'Authorization': `Bearer ${wsToken}`,
-        },
       });
 
       const data = await response.json();

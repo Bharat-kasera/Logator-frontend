@@ -215,12 +215,8 @@ const GateForm: React.FC<GateFormProps> = ({
       const method = editingGate ? 'PUT' : 'POST';
 
       const response = editingGate 
-        ? await api.put(`/gates/${editingGate.id}`, requestBody, {
-            headers: { 'Authorization': `Bearer ${wsToken}` }
-          })
-        : await api.post('/gates', requestBody, {
-            headers: { 'Authorization': `Bearer ${wsToken}` }
-          });
+        ? await api.put(`/gates/${editingGate.id}`, requestBody)
+        : await api.post('/gates', requestBody);
 
       if (!response.ok) {
         const errorData = await response.json();

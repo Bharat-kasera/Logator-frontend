@@ -65,23 +65,11 @@ const Mappings: React.FC = () => {
     setError('');
     const eid = selectedEstablishment.id;
     
-    const fetchWithAuth = (url: string) => 
-      fetch(url, {
-        headers: {
-          'Authorization': `Bearer ${wsToken}`
-        }
-      }).then(res => {
-        if (!res.ok) {
-          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-        }
-        return res.json();
-      });
-
     Promise.all([
-      fetchWithAuth(`/api/departments/${eid}`),
-      fetchWithAuth(`/api/gates/${eid}`), // Fixed endpoint - should be /:establishment_id not query param
-      fetchWithAuth(`/api/user_department_map?establishment_id=${eid}`),
-      fetchWithAuth(`/api/user_gate_map?establishment_id=${eid}`),
+      api.get(`/departments/${eid}`).then(res => res.json()),
+      api.get(`/gates/${eid}`).then(res => res.json()),
+      api.get(`/user_department_map?establishment_id=${eid}`).then(res => res.json()),
+      api.get(`/user_gate_map?establishment_id=${eid}`).then(res => res.json()),
     ])
       .then(([departments, gates, deptMappings, gateMappings]) => {
         setDepartments(departments || []);
@@ -139,9 +127,7 @@ const Mappings: React.FC = () => {
       setRequestSent({ type: 'dept', idx: deptIdx });
       setDeptInputs({ ...deptInputs, [deptIdx]: '' });
       // Refresh mappings
-      const updated = await api.get(`/user_department_map?establishment_id=${selectedEstablishment.id}`, {
-        headers: { 'Authorization': `Bearer ${wsToken}` }
-      }).then(r => r.json());
+      const updated = await api.get(`/user_department_map?establishment_id=${selectedEstablishment.id}`).then(r => r.json());
       setDeptMappings(updated);
     } catch {
       setError('Failed to map user');
@@ -164,18 +150,12 @@ const Mappings: React.FC = () => {
         gate_id: gateId, 
         user_phone: phone, 
         status: '1'
-      }, {
-        headers: { 
-          'Authorization': `Bearer ${wsToken}`
-        }
       });
       if (!res.ok) throw new Error('Failed to map user');
       setRequestSent({ type: 'gate', idx: gateIdx });
       setGateInputs({ ...gateInputs, [gateIdx]: '' });
       // Refresh mappings
-      const updated = await api.get(`/user_gate_map?establishment_id=${selectedEstablishment.id}`, {
-        headers: { 'Authorization': `Bearer ${wsToken}` }
-      }).then(r => r.json());
+      const updated = await api.get(`/user_gate_map?establishment_id=${selectedEstablishment.id}`).then(r => r.json());
       setGateMappings(updated);
     } catch {
       setError('Failed to map user');
@@ -205,14 +185,9 @@ const Mappings: React.FC = () => {
     setLoading(true);
     setError('');
     try {
-      await fetch(`/api/user_gate_map/${mappingId}?establishment_id=${selectedEstablishment.id}`, { 
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${wsToken}` }
-      });
+      await api.delete(`/user_gate_map/${mappingId}?establishment_id=${selectedEstablishment.id}`);
       // Refresh mappings
-      const updated = await fetch(`/api/user_gate_map?establishment_id=${selectedEstablishment.id}`, {
-        headers: { 'Authorization': `Bearer ${wsToken}` }
-      }).then(r => r.json());
+      const updated = await api.get(`/user_gate_map?establishment_id=${selectedEstablishment.id}`).then(r => r.json());
       setGateMappings(updated);
     } catch {
       setError('Failed to delete mapping');
@@ -286,9 +261,7 @@ const Mappings: React.FC = () => {
   // Validate phone exists
   setLoading(true);
   try {
-    const res = await fetch(`/api/check-user-exists?phone=${encodeURIComponent(phone)}`, {
-      headers: { 'Authorization': `Bearer ${wsToken}` }
-    });
+    const res = await api.get(`/check-user-exists?phone=${encodeURIComponent(phone)}`);
     const data = await res.json();
     if (!data.exists || !data.user_id) {
       setDeptPhoneErrors(e => ({ ...e, [dept.id]: 'User not found' }));
@@ -406,9 +379,7 @@ const Mappings: React.FC = () => {
                 }
                 // Refresh mappings
                 const eid = selectedEstablishment.id;
-                const updated = await fetch(`/api/user_department_map?establishment_id=${eid}`, {
-                  headers: { 'Authorization': `Bearer ${wsToken}` }
-                }).then(r => r.json());
+                const updated = await api.get(`/user_department_map?establishment_id=${eid}`).then(r => r.json());
                 setDeptMappings(updated);
                 setDeptAdds({});
                 setDeptRemoves({});

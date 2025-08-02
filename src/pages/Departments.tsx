@@ -31,7 +31,7 @@ const Departments: React.FC = () => {
   const { userPlan } = useData();
   const plan = Number(selectedEstablishment?.plan) || 1; // Convert to number and default to Basic if undefined
   const maxDepartments = userPlan?.maxDepartments || 1; // Use centralized plan config
-    const isBasic = plan === 1;
+  const isBasic = plan === 1;
   const isPro = plan === 2;
 
   // Get establishments from centralized data context
@@ -50,15 +50,12 @@ const Departments: React.FC = () => {
 
   const fetchDepartments = useCallback(async () => {
     if (!selectedEstablishment) return;
-    
+
     setLoading(true);
     setError("");
     try {
       const response = await api.get(
-        `/departments/${selectedEstablishment.id}`,
-        {
-          headers: { Authorization: `Bearer ${wsToken}` },
-        }
+        `/departments/${selectedEstablishment.id}`
       );
 
       if (response.ok) {
@@ -96,10 +93,6 @@ const Departments: React.FC = () => {
       const response = await api.post("/departments", {
         establishment_id: selectedEstablishment.id,
         name: dept.trim(),
-      }, {
-        headers: {
-          Authorization: `Bearer ${wsToken}`,
-        },
       });
 
       if (!response.ok) {
@@ -129,9 +122,7 @@ const Departments: React.FC = () => {
     setSuccess("");
 
     try {
-      const response = await api.delete(`/departments/${id}`, {
-        headers: { Authorization: `Bearer ${wsToken}` },
-      });
+      const response = await api.delete(`/departments/${id}`);
 
       if (!response.ok) {
         throw new Error("Failed to delete department");
